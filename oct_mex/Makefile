@@ -1,10 +1,14 @@
-# $Id: Makefile,v 1.1 2009/04/15 14:56:06 jrothwei Exp jrothwei $
+# $Id: Makefile,v 1.4 2009/06/17 18:18:45 jrothwei Exp jrothwei $
 # Copyright 2009 Joseph Rothweiler
 
-all: mex1.mex firstmexdemo.mex oct_myfunc.mex \
-	usb_opendev.mex       \
-	usb_writestring.mex   \
-	usb_readbytes.mex
+all: \
+	mex/usb_opendev.mex       \
+	mex/usb_writestring.mex   \
+	mex/usb_readbytes.mex
 
-%.mex: %.c
-	 mkoctfile --mex $< -lusb
+oldstuff: mex/mex1.mex mex/firstmexdemo.mex mex/oct_myfunc.mex \
+	mex/calltest.mex
+
+mex/%.mex: %.c
+	mkdir -p mex
+	mkoctfile -Wall --mex -o $@ $< -lusb
