@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2009/06/17 18:18:45 jrothwei Exp jrothwei $
+# $Id: Makefile,v 1.4 2009/06/17 18:18:45 jrothwei Exp $
 # Copyright 2009 Joseph Rothweiler
 
 all: \
