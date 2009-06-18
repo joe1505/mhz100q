@@ -1,4 +1,4 @@
--- $Id: fx2usb_async8b.vhd,v 1.5 2009/04/15 12:42:01 jrothwei Exp jrothwei $
+-- $Id: fx2usb_async8b.vhd,v 1.6 2009/06/10 16:51:18 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Branch 12Mar2009.
 -- from usb_fifos.vhd 1.5 2009/03/04 02:21:17
@@ -89,6 +89,7 @@ entity fx2usb_async8b is
     fifo2_req       : in  STD_LOGIC;
     fifo2_ack       : out STD_LOGIC;
     fifo2_outbyte   : in  STD_LOGIC_VECTOR(7 downto 0);
+    fifo2_end       : in  STD_LOGIC;  -- Set to request a pktend signal.
     muxed_bytecount : out STD_LOGIC_VECTOR(31 downto 0);
     mux_sel         : in  STD_LOGIC_VECTOR(1 downto 0);
     debugvec        : out STD_LOGIC_VECTOR(7 downto 0)
@@ -104,6 +105,7 @@ architecture rtl of fx2usb_async8b is
   signal slrd_i     : STD_LOGIC;
   signal slwr_i     : STD_LOGIC;
   signal sloe_i     : STD_LOGIC;
+  signal pktend_i   : STD_LOGIC;
   signal fifo0_ack_i : STD_LOGIC;
   signal fifo0_bytecount_i : STD_LOGIC_VECTOR(31 downto 0);
   signal fifo2_ack_i : STD_LOGIC;
@@ -115,7 +117,7 @@ begin
   -- These are unused for now.
   int0   <= '0';
   slcs   <= '0';
-  pktend <= '0';
+  pktend <= pktend_i;
   -- Connect internal to external.
   slrd           <= slrd_i;
   slwr           <= slwr_i;
@@ -197,6 +199,12 @@ begin
 	  fdata_out <= fifo2_outbyte; -- Put the data on the bus,
 	  fifo2_bytecount_i <= fifo2_bytecount_i + 1; -- For debugging.
 	  fdata_oe_i <= '1';
+	elsif( (fifo2_ack_i = '0')     -- Last transaction is complete.
+	    and (fifo2_end = '1') -- End-of-packet signal requested.
+	    and (flagb = '0')     -- Space is available in the fifo.
+          ) then
+	  fdata_oe_i <= '0';
+	  pktend_i <= '1';
 	else
 	  fdata_oe_i <= '0';
 	end if;
@@ -216,6 +224,7 @@ begin
           slwr_i  <= '0';  
 	end if;
       when "01010" =>    -- Write finished.
+        pktend_i <= '0';  -- De-assert (whether or not it was asserted).
         faddr_i <= "10";
         sloe_i  <= '0';
         slrd_i  <= '0';

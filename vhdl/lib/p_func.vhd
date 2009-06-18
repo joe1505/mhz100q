@@ -1,4 +1,4 @@
--- $Id: p_func.vhd,v 1.2 2009/04/15 12:42:04 jrothwei Exp jrothwei $
+-- $Id: p_func.vhd,v 1.2 2009/04/15 12:42:04 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Branch of miscpack.vhd,v 2.0 2007/05/30 17:46:33
 

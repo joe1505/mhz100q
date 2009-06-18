@@ -1,4 +1,4 @@
--- $Id: xilinx_2kx9_3e.vhd,v 1.2 2009/04/15 12:42:16 jrothwei Exp jrothwei $
+-- $Id: xilinx_2kx9_3e.vhd,v 1.2 2009/04/15 12:42:16 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 --------------------------------------------------------------------------------
 -- Joseph Rothweiler, Sensicomm LLC, Branch 09Mar2009 from

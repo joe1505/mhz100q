@@ -1,4 +1,4 @@
--- $Id: seg7x4.vhd,v 1.3 2009/04/15 12:43:13 jrothwei Exp jrothwei $
+-- $Id: seg7x4.vhd,v 1.3 2009/04/15 12:43:13 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -------------------------------------------------------------------------------
 -- Branch of seg7.vhd,v 2.0 2007/05/30 17:46:46
