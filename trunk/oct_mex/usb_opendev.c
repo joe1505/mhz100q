@@ -1,4 +1,4 @@
-/* $Id: usb_opendev.c,v 1.7 2009/06/17 18:11:08 jrothwei Exp jrothwei $ */
+/* $Id: usb_opendev.c,v 1.7 2009/06/17 18:11:08 jrothwei Exp $ */
 /* Copyright 2009 Joseph Rothweiler **
 *************************************/
 /* Joseph Rothweiler, Sensicomm LLC. Started 17Mar2009. */

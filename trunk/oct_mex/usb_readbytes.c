@@ -1,10 +1,12 @@
-/* $Id: usb_readbytes.c,v 1.1 2009/04/15 14:57:44 jrothwei Exp jrothwei $ */
+/* $Id: usb_readbytes.c,v 1.4 2009/06/17 21:21:58 jrothwei Exp jrothwei $ */
 /* Copyright 2009 Joseph Rothweiler **
 *************************************/
 /* Joseph Rothweiler, Sensicomm LLC. Started 17Mar2009. */
 /* Creating a .mex file to open a USB device using libusb.
 ** Usage:
-**   bytes = usb_readbytes(usbdev,ep,maxcount)
+**   [bytes,err] = usb_readbytes(usbdev,ep,maxcount)
+** bytes is a UINT8_T array.
+** err is negative on error.
 */
 
 #include "mex.h"
@@ -18,26 +20,26 @@ void mexFunction(
 	int k;
 
 	if(nrhs!=3) {
-		mexErrMsgTxt("usb_readbytes must have 3 arguments");
+		mexErrMsgIdAndTxt("USB:readbytes","Must have 3 arguments");
+	}
+	if( (nlhs<1)||(nlhs>2) ) {
+		mexErrMsgIdAndTxt("USB:readbytes","Must have 1 or 2 returns");
 	}
 
 	/**********************************************
 	** Check the device. */
 	int mrows, ncols;
 	k=0;
+	if(!mxIsUint64(prhs[k])) {
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be Uint64",k+1);
+	}
 	mrows = mxGetM(prhs[k]);
 	ncols = mxGetN(prhs[k]);
 	if(mrows!=1 || ncols != 1) {
-			mexPrintf("Argument %d bad.",k+1);
-			mexErrMsgTxt("Must be scalar");
+			mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be scalar",k+1);
 	}
 	if(mxIsComplex(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be noncomplex");
-	}
-	if(!mxIsUint64(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be Uint64");
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be noncomplex",k+1);
 	}
 	struct usb_dev_handle *usbhandle;
 	UINT64_T *hvalp;
@@ -47,19 +49,16 @@ void mexFunction(
 	/**********************************************
 	** Check the endpoint. */
 	k=1;
+	if(!mxIsNumeric(prhs[k])) {
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be numeric",k+1);
+	}
+	if(mxIsComplex(prhs[k])) {
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be noncomplex",k+1);
+	}
 	mrows = mxGetM(prhs[k]);
 	ncols = mxGetN(prhs[k]);
 	if(mrows!=1 || ncols != 1) {
-			mexPrintf("Argument %d bad.",k+1);
-			mexErrMsgTxt("Must be scalar");
-	}
-	if(mxIsComplex(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be noncomplex");
-	}
-	if(!mxIsNumeric(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be numeric");
+			mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be scalar",k+1);
 	}
 	int ep;
 	ep = mxGetScalar(prhs[k]);
@@ -67,19 +66,16 @@ void mexFunction(
 	/**********************************************
 	** Check the maxbytes value. */
 	k=2;
+	if(!mxIsNumeric(prhs[k])) {
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be numeric",k+1);
+	}
+	if(mxIsComplex(prhs[k])) {
+		mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be noncomplex",k+1);
+	}
 	mrows = mxGetM(prhs[k]);
 	ncols = mxGetN(prhs[k]);
 	if(mrows!=1 || ncols != 1) {
-			mexPrintf("Argument %d bad.",k+1);
-			mexErrMsgTxt("Must be scalar");
-	}
-	if(mxIsComplex(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be noncomplex");
-	}
-	if(!mxIsNumeric(prhs[k])) {
-		mexPrintf("Argument %d bad.",k+1);
-		mexErrMsgTxt("Must be numeric");
+			mexErrMsgIdAndTxt("USB:readbytes","Argument %d must be scalar",k+1);
 	}
 	int maxbytes;
 	maxbytes = mxGetScalar(prhs[k]);
@@ -87,38 +83,56 @@ void mexFunction(
 
 	/**********************************************
 	** set up the output value, as a uint8 array.
+	** FIXME: should I change to INT8 (or make it an option?)
 	*/
+	UINT8_T *inbytes;
+	inbytes = mxCalloc(maxbytes>0?maxbytes:1,sizeof(*inbytes));
+	if(inbytes==NULL) {
+		mexErrMsgIdAndTxt("USB:readbytes","trouble allocating %d bytes",maxbytes);
+	}
+
+	/*************************
+	 * Do the read.         */
+
+	int rtn, ngot;
+	rtn = usb_bulk_read(usbhandle,ep,(char *)inbytes,maxbytes,10); 
+	if(rtn<0) {
+		// mexPrintf("read returned %d\n",rtn);
+		ngot = 0;
+	} else {
+		// mexPrintf("read %d bytes\n",rtn);
+		ngot = rtn;
+	}
+
+	/***********************
+	 * Return the data.   */
+
 	int ndims = 2;
-	int dims[2];
-	dims[0] = 1;
-	dims[1] = maxbytes;
+	mwSize dims[2];
+	// dims = (mwSize *) mxMalloc (ndims * sizeof(mwSize));
+	if(ngot==0) {
+		dims[0] = 0;
+		dims[1] = 0;
+	} else {
+		dims[0] = 1;
+		dims[1] = ngot;
+	}
 	plhs[0] = mxCreateNumericArray(ndims,dims,mxUINT8_CLASS,mxREAL);
 	UINT8_T *bytes;
 	bytes = mxGetData(plhs[0]);
-	
-	int rtn, ngot;
-	rtn = usb_bulk_read(usbhandle,ep,bytes,maxbytes,10); 
-	if(rtn<0) {
-		mexPrintf("read returned %d\n",rtn);
-		ngot = 0;
-	}else {
-		mexPrintf("read %d bytes\n",rtn);
-		ngot = rtn;
-	}
+	for(k=0;k<ngot;k++) bytes[k] = inbytes[k];
+	mxFree(inbytes);
 	// for(k=0;k<ngot;k++) bytes[k] = 0x80+(k%8);
 
-	if(ngot>=0) {
-		if(ngot>maxbytes) {
-			mexPrintf("read returned %d . max was %d\n",ngot,maxbytes);
-		} else if(ngot<maxbytes) {
-			dims[1] = ngot;
-			void *pr;
-			/* Change the dimensions. This doesn't change the allocation. */
-			// mxSetDimensions(plhs[0],dims,ndims);
-			if(ngot==0) ngot = 1;  /* Avoid possible allocation problems. */
-			pr = mxGetPr(plhs[0]);
-			// mxRealloc(bytes,ngot*sizeof(*bytes));
-			// mxRealloc(pr,ngot*sizeof(*bytes));
-		}
+	if(nlhs>1) {
+		dims[0] = dims[1] = 1;
+		double *dval;
+		plhs[1] = mxCreateNumericArray(ndims,dims,mxDOUBLE_CLASS,mxREAL);
+		dval = mxGetData(plhs[1]);
+		*dval = rtn;
+	} else if(rtn < 0) {
+		/* -110 is a timeout. That's not really an error. */
+		if(rtn != -110) mexErrMsgIdAndTxt("USB:readbytes",
+			"trouble reading %d bytes. Error %d",maxbytes,rtn);
 	}
 }
