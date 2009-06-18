@@ -1,4 +1,4 @@
--- $Id: debounce.vhd,v 1.2 2009/04/15 12:41:57 jrothwei Exp jrothwei $
+-- $Id: debounce.vhd,v 1.2 2009/04/15 12:41:57 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -------------------------------------------------------------------------------
 -- Joseph Rothweiler, Sensicomm LLC. Started 13Mar2009.
