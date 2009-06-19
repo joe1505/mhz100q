@@ -1,4 +1,4 @@
--- $Id: scope_top.vhd,v 1.22 2009/04/15 12:41:35 jrothwei Exp jrothwei $
+-- $Id: scope_top.vhd,v 1.28 2009/06/19 14:56:46 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Started 16Feb2009.
 -- http://www.sensicomm.com
@@ -18,13 +18,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------------
--- Testing communications with the Cypress USB.
--- Developing it for the Nexys 2 board from Digilent: http://www.digilentinc.com
+-- MHZ100Q oscilloscope driver top-level module.
+-- For the Nexys 2 board from Digilent: http://www.digilentinc.com
 -- Chip is XC3S500E FGG320 package, Speed Grade 5C/4I.
--- This test program just displays incoming data (from EP2) on the LED's, and
--- Sends dummy data to EP6 when BTN0 is pushed.
--- The Slide switches select what is displayed on the row of LED's. Set
--- only SW(2) high to display the EP2 output byte.
 --
 -------------------------------------------------------------------------------
 library IEEE;
@@ -65,6 +61,11 @@ entity scope_top is
     AD23_CLK       : out STD_LOGIC;
     AD23_PWRDN     : out STD_LOGIC;
     AD3_DATA       : in  STD_LOGIC_VECTOR(7 downto 0);
+    AD2_DATA       : in  STD_LOGIC_VECTOR(7 downto 0);
+    AD01_CLK       : out STD_LOGIC;
+    AD01_PWRDN     : out STD_LOGIC;
+    AD1_DATA       : in  STD_LOGIC_VECTOR(7 downto 0);
+    AD0_DATA       : in  STD_LOGIC_VECTOR(7 downto 0);
     --
     VGA_RED        : out STD_LOGIC_VECTOR(2 downto 0);
     VGA_HS         : out STD_LOGIC;
@@ -77,26 +78,33 @@ architecture rtl of scope_top is
   attribute CLOCK_SIGNAL : string;
   attribute PERIOD       : string;
   attribute IOB          : string;
-  --component cic3_down is generic (
-  --  downfactor : integer ;
-  --  inwidth    : integer ;
-  --  o1width    : integer ;
-  --  o2width    : integer ;
-  --  o3width    : integer
-  --) ;
-  --port (
-  --  clk      : in   STD_LOGIC;  -- system clock at the input sampling rate.
-  --  down     : out STD_LOGIC; -- High for 1 clk cycle when a new outsig is generated.
-  --  insig    : in  STD_LOGIC_VECTOR(inwidth-1 downto 0);
-  --  outsig   : out STD_LOGIC_VECTOR(o3width-1 downto 0)
-  --);
-  -- end component;
 
-  component cictest is port (
+  component bytecmd is port (
+    clk50m   : in   STD_LOGIC;  -- system clock.
+    byteval  : in   STD_LOGIC_VECTOR (7 downto 0);  -- 
+    req      : out  STD_LOGIC;
+    ack      : in   STD_LOGIC;
+    strobes  : out  STD_LOGIC_VECTOR (15 downto 0);  -- FIXE: Make size a parameter.
+    accum    : out  STD_LOGIC_VECTOR (31 downto 0)   -- FIXE: Make size a parameter.
+  );
+  end component;
+  component ex8from32 is port (
+    leftpos  : in  STD_LOGIC_VECTOR( 4 downto 0); -- LSB position.
+    data_in  : in  STD_LOGIC_VECTOR(31 downto 0); -- Input word.
+    data_out : out STD_LOGIC_VECTOR( 7 downto 0)  -- Output byte.
+  );
+  end component;
+
+  component cic3_down is generic (
+    downwidth  : integer ; -- Maximum number of bits in the decimation factor.
+    inwidth    : integer ; -- Length of 2's complement input, including sign bit.
+    o3width    : integer   -- Length of output, typically inwidth+3*log2(downfactor).
+  ) ; port (
     clk      : in  STD_LOGIC; -- System clock at the input sampling rate.
     down     : out STD_LOGIC; -- High for 1 clk cycle when a new outsig is generated.
-    insig    : in  STD_LOGIC_VECTOR(7 downto 0);
-    outsig   : out STD_LOGIC_VECTOR(12 downto 0)
+    decimax  : in  STD_LOGIC_VECTOR(downwidth-1 downto 0); -- decimation_factor-1;
+    insig    : in  STD_LOGIC_VECTOR(inwidth-1 downto 0);
+    outsig   : out STD_LOGIC_VECTOR(o3width-1 downto 0)
   );
   end component;
   component debouncer is generic (
@@ -179,6 +187,7 @@ architecture rtl of scope_top is
     fifo0_ack       : out STD_LOGIC;
     fifo2_req       : in  STD_LOGIC;
     fifo2_ack       : out STD_LOGIC;
+    fifo2_end       : in  STD_LOGIC;
     fifo2_outbyte   : in  STD_LOGIC_VECTOR(7 downto 0);
     muxed_bytecount : out STD_LOGIC_VECTOR(31 downto 0);
     mux_sel         : in  STD_LOGIC_VECTOR(1 downto 0);
@@ -205,6 +214,7 @@ architecture rtl of scope_top is
   signal fifo0_ack  : STD_LOGIC;
   signal fifo2_req  : STD_LOGIC;
   signal fifo2_ack  : STD_LOGIC;
+  signal fifo2_end  : STD_LOGIC := '0';
   signal fdata_in  : STD_LOGIC_VECTOR(7 downto 0);
   signal fdata_out : STD_LOGIC_VECTOR(7 downto 0);
   signal fdata_oe  : STD_LOGIC;
@@ -240,16 +250,37 @@ architecture rtl of scope_top is
   signal ram_addr1     : STD_LOGIC_VECTOR(31 downto 0); -- 11 bits + extra for debugging.
   signal ram3_data1in  : STD_LOGIC_VECTOR( 8 downto 0);
   signal ram3_data1out : STD_LOGIC_VECTOR( 8 downto 0);
-    --
+  signal ram2_data1in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram2_data1out : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram1_data1in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram1_data1out : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram0_data1in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram0_data1out : STD_LOGIC_VECTOR( 8 downto 0);
+  --
   signal ram_write2    : STD_LOGIC := '0'; -- Not used.
   signal ram_addr2     : STD_LOGIC_VECTOR(31 downto 0); -- 10->0 + extra for debug.
   signal ram3_data2in  : STD_LOGIC_VECTOR( 8 downto 0);
   signal ram3_data2out : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram2_data2in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram2_data2out : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram1_data2in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram1_data2out : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram0_data2in  : STD_LOGIC_VECTOR( 8 downto 0);
+  signal ram0_data2out : STD_LOGIC_VECTOR( 8 downto 0);
   --
-  signal cap_count      : STD_LOGIC_VECTOR(10 downto 0);
+  -- See if init'ing cap_count will fix the "extra byte after power-up" problem. NO.
+  signal cap_count      : STD_LOGIC_VECTOR(10 downto 0) := (OTHERS => '1');
   signal cap_count_init : STD_LOGIC_VECTOR(10 downto 0) := (OTHERS => '1');
+  --
   signal ad3_input      : STD_LOGIC_VECTOR(7 downto 0); -- Try to force register into IOB.
+  signal ad2_input      : STD_LOGIC_VECTOR(7 downto 0); -- Try to force register into IOB.
+  signal ad1_input      : STD_LOGIC_VECTOR(7 downto 0); -- Try to force register into IOB.
+  signal ad0_input      : STD_LOGIC_VECTOR(7 downto 0); -- Try to force register into IOB.
   attribute IOB of ad3_input : signal is "TRUE";
+  attribute IOB of ad2_input : signal is "TRUE";
+  attribute IOB of ad1_input : signal is "TRUE";
+  attribute IOB of ad0_input : signal is "TRUE";
+  --
   signal ad_capturing   : STD_LOGIC;
   signal ad_trigger     : STD_LOGIC;
   --
@@ -259,7 +290,7 @@ architecture rtl of scope_top is
   signal usb_trigger_ad_req : STD_LOGIC;
   signal usb_trigger_upload : STD_LOGIC;
   signal usb_trigger_upload_req : STD_LOGIC;
-  signal usb_upload_count : STD_LOGIC_VECTOR(10 downto 0);
+  signal usb_upload_count : STD_LOGIC_VECTOR(12 downto 0);
   signal usb_upload_active: STD_LOGIC;
   signal usb_upload_state : STD_LOGIC_VECTOR(2 downto 0);
   --
@@ -278,12 +309,39 @@ architecture rtl of scope_top is
   signal fifo2_ack_bug      : STD_LOGIC;
   signal fifo2_ack_bugcount : STD_LOGIC_VECTOR(15 downto 0);
   --
-  signal cic_down3  : STD_LOGIC;
-  signal cic_in3    : STD_LOGIC_VECTOR( 7 downto 0);
-  signal cic_out3   : STD_LOGIC_VECTOR(23 downto 0);
+  signal cic_shift  : STD_LOGIC_VECTOR(4 downto 0);
   signal cic_enable : STD_LOGIC:= '0';
+  signal cic_decimax: STD_LOGIC_VECTOR(7 downto 0) := X"03"; -- Decimation count - 1;
+  --
+  signal cic3_down3  : STD_LOGIC;
+  signal cic3_in3    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal cic3_out3   : STD_LOGIC_VECTOR(31 downto 0);
+
+  signal cic2_down3  : STD_LOGIC;
+  signal cic2_in3    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal cic2_out3   : STD_LOGIC_VECTOR(31 downto 0);
+ 
+  signal cic1_down3  : STD_LOGIC;
+  signal cic1_in3    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal cic1_out3   : STD_LOGIC_VECTOR(31 downto 0);
+   
+  signal cic0_down3  : STD_LOGIC;
+  signal cic0_in3    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal cic0_out3   : STD_LOGIC_VECTOR(31 downto 0);
+  --
+  signal ex8_c3_in     : STD_LOGIC_VECTOR(31 downto 0);
+  signal ex8_c3_out    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal ex8_c2_in     : STD_LOGIC_VECTOR(31 downto 0);
+  signal ex8_c2_out    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal ex8_c1_in     : STD_LOGIC_VECTOR(31 downto 0);
+  signal ex8_c1_out    : STD_LOGIC_VECTOR( 7 downto 0);
+  signal ex8_c0_in     : STD_LOGIC_VECTOR(31 downto 0);
+  signal ex8_c0_out    : STD_LOGIC_VECTOR( 7 downto 0);
   --
   signal samplecapture : STD_LOGIC;
+  --
+  signal bytecmd_strobes : STD_LOGIC_VECTOR(15 downto 0);
+  signal bytecmd_accum   : STD_LOGIC_VECTOR(31 downto 0);
   --
   -- Debugging only.
   signal ack_long : STD_LOGIC_VECTOR(7 downto 0);
@@ -301,6 +359,45 @@ begin
     addr2    => ram_addr2(10 downto 0),
     data2in  => ram3_data2in,
     data2out => ram3_data2out
+  );
+  ram2: xilinx_2kx9_3e port map (
+    clock1   => clk_100m,
+    write1   => ram_write1,
+    addr1    => ram_addr1(10 downto 0),
+    data1in  => ram2_data1in,
+    data1out => ram2_data1out,
+    --
+    clock2   => clk_50m,  -- FIXME: maybe time against the USB clock?
+    write2   => ram_write2,
+    addr2    => ram_addr2(10 downto 0),
+    data2in  => ram2_data2in,
+    data2out => ram2_data2out
+  );
+  ram1: xilinx_2kx9_3e port map (
+    clock1   => clk_100m,
+    write1   => ram_write1,
+    addr1    => ram_addr1(10 downto 0),
+    data1in  => ram1_data1in,
+    data1out => ram1_data1out,
+    --
+    clock2   => clk_50m,  -- FIXME: maybe time against the USB clock?
+    write2   => ram_write2,
+    addr2    => ram_addr2(10 downto 0),
+    data2in  => ram1_data2in,
+    data2out => ram1_data2out
+  );
+   ram0: xilinx_2kx9_3e port map (
+    clock1   => clk_100m,
+    write1   => ram_write1,
+    addr1    => ram_addr1(10 downto 0),
+    data1in  => ram0_data1in,
+    data1out => ram0_data1out,
+    --
+    clock2   => clk_50m,  -- FIXME: maybe time against the USB clock?
+    write2   => ram_write2,
+    addr2    => ram_addr2(10 downto 0),
+    data2in  => ram0_data2in,
+    data2out => ram0_data2out
   );
   dcm0: dcm_wrap port map (
     CLK_50M    => CLK_50M,
@@ -353,10 +450,19 @@ begin
     fifo0_ack  => fifo0_ack,
     fifo2_req  => fifo2_req,
     fifo2_ack  => fifo2_ack,
+    fifo2_end  => fifo2_end,
     fifo2_outbyte   => fifo2_outbyte,
     muxed_bytecount => muxed_bytecount,
     mux_sel         => usb_mux_sel,
     debugvec       => debugvec
+  );
+  bytecmd0: bytecmd port map (
+    clk50m   => CLK_50M,
+    byteval  => fifo0_hostbyte,
+    req      => fifo0_req,
+    ack      => fifo0_ack,
+    strobes  => bytecmd_strobes,
+    accum    => bytecmd_accum
   );
   debouncer0 : debouncer generic map (
     portwidth   => 4,
@@ -366,23 +472,69 @@ begin
     raw      => BTN,
     clean    => btn_debounced
   );
-  -- cic3 : cic3_down generic map (
-  --   downfactor => 16,
-  --   inwidth    =>  8,
-  --   o1width    => 14,
-  --   o2width    => 20,
-  --   o3width    => 24
-  -- ) port map (
-  --   clk      => clk_100m,
-  --   down     => cic_down3,
-  --   insig    => cic_in3,
-  --   outsig   => cic_out3
-  -- );
-  cic : cictest port map (
-     clk      => clk_100m,
-     down     => cic_down3,
-     insig    => cic_in3,
-     outsig   => cic_out3(12 downto 0)
+  ex8_c3 : ex8from32 port map (
+    leftpos  => cic_shift,
+    data_in  => ex8_c3_in,
+    data_out => ex8_c3_out
+  );
+  ex8_c2 : ex8from32 port map (
+    leftpos  => cic_shift,
+    data_in  => ex8_c2_in,
+    data_out => ex8_c2_out
+  );
+  ex8_c1 : ex8from32 port map (
+    leftpos  => cic_shift,
+    data_in  => ex8_c1_in,
+    data_out => ex8_c1_out
+  );
+  ex8_c0 : ex8from32 port map (
+    leftpos  => cic_shift,
+    data_in  => ex8_c0_in,
+    data_out => ex8_c0_out
+  );
+  cic3 : cic3_down generic map (
+    downwidth  =>  8,
+    inwidth    =>  8,
+    o3width    => 32
+  ) port map (
+    clk      => clk_100m,
+    down     => cic3_down3,
+    decimax  => cic_decimax,
+    insig    => cic3_in3,
+    outsig   => cic3_out3
+  );
+    cic2 : cic3_down generic map (
+    downwidth  =>  8,
+    inwidth    =>  8,
+    o3width    => 32
+  ) port map (
+    clk      => clk_100m,
+    down     => cic2_down3,
+    decimax  => cic_decimax,
+    insig    => cic2_in3,
+    outsig   => cic2_out3
+  );
+    cic1 : cic3_down generic map (
+    downwidth  =>  8,
+    inwidth    =>  8,
+    o3width    => 32
+  ) port map (
+    clk      => clk_100m,
+    down     => cic1_down3,
+    decimax  => cic_decimax,
+    insig    => cic1_in3,
+    outsig   => cic1_out3
+  );
+    cic0 : cic3_down generic map (
+    downwidth  =>  8,
+    inwidth    =>  8,
+    o3width    => 32
+  ) port map (
+    clk      => clk_100m,
+    down     => cic0_down3,
+    decimax  => cic_decimax,
+    insig    => cic0_in3,
+    outsig   => cic0_out3
   );
   process(CLK_50M,fdata_oe,fdata_out,SW) begin
     -- Tristate control for the data lines.
@@ -393,115 +545,37 @@ begin
     end if;
     fdata_in <= U_FDATA;
     ---------------------------------------------------------------
-    usb_mux_sel <= SW(3) & '0';
-    -- The LED muxing doesn't need to be registered.
-    if(SW="00000000") then               -- x00: Just io signal.
-      LED <= "0101" & BTN;
-    elsif(SW="00000001") then            -- x01: IFCLK counter.
-      LED <= ifcounter(27 downto 20);
-    elsif(SW="00000010") then            -- X02: in status lines.
-      LED <= "00000" & U_FLAGC & U_FLAGB & U_FLAGA;
-    elsif(SW="00000011") then            -- X03: out status lines.
-      LED <= 
-          U_PKTEND_i
-        & U_INT0_i
-        & U_SLCS_i
-        & U_SLOE_i
-        & U_SLWR_i
-        & U_SLRD_i
-        & U_FADDR_i ;
-    elsif(SW="00000100") then            -- X04: FIFO 0 outword.
-      LED <= fifo0_hostbyte;
-    elsif(SW="00000101") then            -- X05: FIFO 0 bytecount
-      LED <= muxed_bytecount(7 downto 0);
-    elsif(SW="00000110") then            -- X06: FIFO 0 bytecount
-      LED <= muxed_bytecount(15 downto 8);
-    elsif(SW="00000111") then            -- X07: FIFO 0 bytecount
-      LED <= muxed_bytecount(23 downto 16);
-    --
-    elsif(SW="00001000") then            -- X08: debugvec
-      LED <= debugvec;
-    elsif(SW="00001001") then            -- X09: FIFO 2 incount
-      LED <= muxed_bytecount(7 downto 0);
-    elsif(SW="00001010") then            -- X0a: FIFO 2 incount
-      LED <= muxed_bytecount(15 downto 8);
-    elsif(SW="00001011") then            -- X0b: FIFO 2 incount
-      LED <= muxed_bytecount(23 downto 16);
-    elsif(SW="00001100") then            -- X0c: FIFO 0 cmd_byte_counter
-      LED <= cmd_byte_counter( 7 downto  0);
-    elsif(SW="00001101") then            -- X0d: FIFO 0 cmd_byte_counter
-      LED <= cmd_byte_counter(15 downto  8);
-    elsif(SW="00001110") then            -- X0e: FIFO 0 cmd_byte_counter
-      LED <= cmd_byte_counter(23 downto 16);
-    elsif(SW="00001111") then            -- X0f: FIFO 0 cmd_byte_counter
-      LED <= cmd_byte_counter(31 downto 24);
-    elsif(SW="00010000") then            -- X10: ADC-low overlapped.
-      LED <= adc_data(7 downto 0);
-    elsif(SW="00010001") then            -- X11: ADC-high overlapped.
-      LED <= adc_data(11 downto 4);
-    elsif(SW="00100000") then            -- X20: 100M clocks.
-      LED <= clk_50_div(26 downto 23) & clk_100_div(27 downto 24) ;
-    elsif(SW="00100001") then            -- X21: Debounced switches.
-      -- This doesn't really check the debouncing.
-      LED <= "0000" & btn_debounced;
-    elsif(SW="00111000") then            -- X38: Control status.
-      LED <= '0' & usb_trigger_upload_req & fifo2_req & fifo2_ack &
-             usb_upload_active & usb_upload_state(2 downto 0);
-    else
-      LED <= "10101010";
-    end if;
-    if (rising_edge(CLK_50M)) then
-
-      ---------------------------------------------------------------
-    end if;
+--  The LED muxing doesn't need to be registered.
+    case SW(7 downto 5) is
+      when "000" => LED <=  "00" & ad_capturing & usb_trigger_ad_req &
+                            "00" & usb_upload_active & usb_trigger_upload_req;
+      when "001" => LED <= '0' & usb_trigger_upload_req & fifo2_req & fifo2_ack &
+                           usb_upload_active & usb_upload_state(2 downto 0);
+      when "111" => LED <= "11111111";
+      when OTHERS => LED <= "00000000";
+    end case;
   end process;
   ----------------------------------------------------------------
   -- Simple interpreter to process characters received from USB fifo0.
+  -- 20090618 - bytecmd now does the processing; here we just
+  -- handle the resulting strobes.
+  -- strobes:
+  -- 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+  --  0  0  0  z  y  x  w  v  u  t  s  r  q  p  + hx
+  process(CLK_50M,bytecmd_accum,bytecmd_strobes) begin
+    if (rising_edge(CLK_50M)) then
+      if(bytecmd_strobes(2)='1') then cic_shift          <= bytecmd_accum( 4 downto 0); end if; --  2:p
+      if(bytecmd_strobes(3)='1') then cic_decimax        <= bytecmd_accum( 7 downto 0); end if; --  3:q
+      if(bytecmd_strobes(4)='1') then red_dac_start      <= bytecmd_accum( 7 downto 0); end if; --  4:r
+      if(bytecmd_strobes(5)='1') then cic_enable         <= bytecmd_accum(          0); end if; --  5:s
+      usb_trigger_ad     <= bytecmd_strobes(6);                                                 --  6:t
+      usb_trigger_upload <= bytecmd_strobes(7);                                                 --  7:u
+      if(bytecmd_strobes(8)='1') then dacword            <= bytecmd_accum(11 downto 0); end if; --  8:v
+      if(bytecmd_strobes(9)='1') then fifo2_end          <= bytecmd_accum(          0); end if; --  9:w
+    end if;
+  end process;
   process(CLK_50M) begin
     if (rising_edge(CLK_50M)) then
-      -- fifo0_req <= not fifo0_ack; -- Run as fast as possible.
-      -- case (fifo0_ack & fifo0_req) is
-      if(fifo0_ack='0') then -- Maybe idle.
-        if(fifo0_req='0') then -- Idle.
-          -- Signal that we're ready for the next byte.
-          fifo0_req <= '1';
-	end if;
-	cmd_byte_strobe <= '0';
-      elsif(fifo0_req='1' and cmd_byte_strobe='0') then -- fifo_ack=1 and fifo_req=1. Got the next byte. Process it.
-        cmd_byte <= fifo0_hostbyte;
-	cmd_byte_strobe <= '1';
-      else
-	cmd_byte_strobe <= '0';
-      end if;
-      if(cmd_byte_strobe='1') then
-        fifo0_req <= '0'; -- Signal that we got it.
-        cmd_byte_counter <= cmd_byte_counter + 1;
-        if( cmd_byte=X"2b") then -- '+'
-	  valcollect <= (OTHERS => '0');
-        elsif( (cmd_byte>=X"30")and(cmd_byte<=X"39")) then -- '0'-'9'
-	  valcollect<= valcollect(27 downto 0) & cmd_byte(3 downto 0);
-	elsif( (cmd_byte>=X"61")and(cmd_byte<=X"66")) then -- 'a'-'f'
-	  valcollect<= valcollect(27 downto 0) & (cmd_byte(3 downto 0)+9);
-	end if;
-        if(cmd_byte=X"72") then -- 'r'
-	  red_dac_start <= valcollect(7 downto 0);
-	end if;
-        if(cmd_byte=X"73") then -- 's' -- 0s or 1s to disable on enable CIC.
-	  cic_enable    <= valcollect(0);
-	end if;
-        if(cmd_byte=X"74") then -- 't'
-	  usb_trigger_ad <= '1';
-	end if;
-        if(cmd_byte=X"75") then -- 'u'
-	  usb_trigger_upload <= '1';
-        end if;
-        if(cmd_byte=X"76") then -- 'v'
-	  dacword <= valcollect(11 downto 0); -- Value to the low-speed test DAC.
-        end if;
-      else
-	usb_trigger_ad <= '0';
-        usb_trigger_upload <= '0';
-      end if;
       if(ad_capturing='1') then
         usb_trigger_ad_req <= '0';
       elsif (usb_trigger_ad='1') then
@@ -597,7 +671,8 @@ begin
       end if;
     end if;
   end process;
-  -- Just a test display.
+  -- Display a lot of test information on the 4 7-segment displays.
+  usb_mux_sel <= SW(3) & '0'; -- See cases 0011? and 0111? below.
   process(CLK_50M,seg_segs,seg_digs,SW,valcollect,BTN) begin
     SEG7_SEG <= not seg_segs;
     SEG7_DIG <= not seg_digs;
@@ -606,13 +681,13 @@ begin
     when "00001"   => seg_word <= X"4567";
     when "00010"   => seg_word <= X"89ab";
     when "00011"   => seg_word <= X"cdef";
-    when "00100"   => seg_word <= valcollect(15 downto 0);
-    when "00101"   => seg_word <= valcollect(31 downto 16);
+    when "00100"   => seg_word <= bytecmd_accum(15 downto 0);
+    when "00101"   => seg_word <= bytecmd_accum(31 downto 16);
     -- Note: SW(3) also controls usb_mux_sel, so 011? and 111? show different data.
     when "00110"   => seg_word <= muxed_bytecount(15 downto 0);
     when "00111"   => seg_word <= muxed_bytecount(31 downto 16);
-    when "01110"   => seg_word <= muxed_bytecount(15 downto 0);
-    when "01111"   => seg_word <= muxed_bytecount(31 downto 16);
+    when "01110"   => seg_word <= muxed_bytecount(15 downto 0);  -- See note.
+    when "01111"   => seg_word <= muxed_bytecount(31 downto 16); -- See note.
     when "01000"   => seg_word <= ram_addr1(15 downto 0);
     when "01001"   => seg_word <= ram_addr1(31 downto 16);
     when "01010"   => seg_word <= ram_addr2(15 downto 0);
@@ -622,9 +697,11 @@ begin
     when "10000"   => seg_word <= X"a" & adc_data; -- Consistent with LED's.
     when "10001"   => seg_word <= X"a" & adc_data; -- Consistent with LED's.
     when "10010"   => seg_word <= X"d" & dacword;
+    when "10100"   => seg_word <= "000"& cic_shift & cic_decimax;
+    when "10101"   => seg_word <= X"00"& red_dac_start;
     when OTHERS => seg_word <= X"dead";
     end case;
-    seg_points <= BTN;
+    seg_points <= btn_debounced;
   end process;
   -- To test the DCM.
   process(CLK_50M) begin
@@ -642,11 +719,19 @@ begin
   -- Just 1 A/D for now.
   --------------------------------------------------
   AD23_CLK <= CLK_100M;  -- Clock (always on).
+  AD01_CLK <= CLK_100M;  -- Clock (always on).
   AD23_PWRDN <= '0';    -- A/D always active.
-  process(AD3_DATA,CLK_100M) begin
+  AD01_PWRDN <= '0';    -- A/D always active.
+  process(AD0_DATA,AD1_DATA,AD2_DATA,AD3_DATA,CLK_100M) begin
     if (rising_edge(CLK_100M)) then
-      cic_in3 <= (not ad3_input(7)) & ad3_input(6 downto 0);
+      cic3_in3 <= (not ad3_input(7)) & ad3_input(6 downto 0);
+      cic2_in3 <= (not ad2_input(7)) & ad2_input(6 downto 0);
+      cic1_in3 <= (not ad1_input(7)) & ad1_input(6 downto 0);
+      cic0_in3 <= (not ad0_input(7)) & ad0_input(6 downto 0);
       ad3_input <= AD3_DATA;
+      ad2_input <= AD2_DATA;
+      ad1_input <= AD1_DATA;
+      ad0_input <= AD0_DATA;
     end if;
   end process;
   --------------------------------------------------
@@ -655,19 +740,26 @@ begin
     if(cic_enable='0') then
       samplecapture <= '1';  -- Capture on every 100MHz clock.
     else
-      samplecapture <= cic_down3;
+      samplecapture <= cic3_down3; -- Hack: assume cic[012]_down3 are the same.
     end if;
     if(rising_edge(CLK_100M)) then
       if(cic_enable='0') then
-        -- This works for full speed.
-        -- ram3_data1in <= '0' & ad3_input;
-        ram3_data1in <= '0' & cic_in3;  -- Being processed as 2's complement now.
+        -- Full-speed input, 2's complement.
+        ram3_data1in <= '0' & cic3_in3;
+        ram2_data1in <= '0' & cic2_in3;
+        ram1_data1in <= '0' & cic1_in3;
+        ram0_data1in <= '0' & cic0_in3;
       else
         -- Desampled.
-        --ram3_data1in <= '0' & cic_out3(23 downto 16);
-        ram3_data1in <= '0' & cic_out3(12 downto 5); -- Debug version.
-        -- ram3_data1in <= '0' & SW(7 downto 4) & ram_addr1(0) & "00" & ram_addr1(1); -- DEBUGGING.
+        ram3_data1in <= '0' & ex8_c3_out;
+        ram2_data1in <= '0' & ex8_c2_out;
+        ram1_data1in <= '0' & ex8_c1_out;
+        ram0_data1in <= '0' & ex8_c0_out;
       end if;
+      ex8_c3_in <= cic3_out3;
+      ex8_c2_in <= cic2_out3;
+      ex8_c1_in <= cic1_out3;
+      ex8_c0_in <= cic0_out3;
       if(ad_capturing='1') then
         if(samplecapture='1') then
           ram_write1 <= '1';
@@ -691,51 +783,7 @@ begin
   end process;
   ad_trigger <= usb_trigger_ad_req OR BTN(1);
   --------------------------------------------------
-  -- Read from the RAM (port B), and send to USB.
-  -- Continuous upload for now.
---  process(CLK_50M) begin
---    if(rising_edge(CLK_50M)) then
---      case usb_upload_state is
---      when "000" => -- Idle state
---        if(usb_upload_active='1') then
---	  usb_upload_state<="001";
---	elsif ( (btn_debounced(0)='1') or (usb_trigger_upload_req='1') ) then
---          usb_upload_active <= '1';
---	end if;
---      when "001" => -- Setup state. Latch ram data, increment ram addr and count.
---        usb_upload_count <= usb_upload_count+1;
---        fifo2_outbyte <= ram3_data2out(7 downto 0);
---	usb_upload_state<="010";    -- Unconditionally move to next state.
---      when "010" => -- Signal start.
---        fifo2_req<='1';
---        if(usb_upload_count=0) then
---          usb_upload_active <= '0';
---        end if;
---        ram_addr2 <= ram_addr2 + 1;
---	usb_upload_state<="110";    -- -> 6 (Out of order). Unconditionally move to next state.
---      when "110" => -- Wait for ack.
---	usb_upload_state<="011";    -- 6-> 3.
---      when "011" => -- Wait for ack.
---        if(fifo2_ack='1') then
---          fifo2_req<='0';
---	  usb_upload_state<="100";    -- Move to next state on ack.
---	end if;
---      when "100" => -- Delay state.
---	  usb_upload_state<="101";    -- Move to next state on ack.
---      when "101" => -- Wait for ack to go low.
---        if(fifo2_ack='0') then
---	  usb_upload_state<="111";    -- Back to idle state.
---	end if;
---      when "111" => -- Wait for ack to go low.
---	  usb_upload_state<="000";    -- Back to idle state.
---      when OTHERS => -- Should never happen.
---        fifo2_req <= '0';
---	usb_upload_state<="100";
---      end case;
---    end if;
---  end process;
------------------------------------------------------------------------
--- This is a debugging version. It just uploads dummy data.
+  -- Read from RAM Port B and send to host via USB.
   process(CLK_50M) begin
     if(rising_edge(CLK_50M)) then
       ack_long <= ack_long(6 downto 0) & fifo2_ack;
@@ -748,7 +796,7 @@ begin
             usb_upload_active <= '1';
           end if;
         else 
-          if(usb_upload_count="00000000000") then
+          if(usb_upload_count="0000000000000") then
             usb_upload_active <= '0';
           end if;
           fifo2_req <= '1';
@@ -758,23 +806,17 @@ begin
         usb_upload_count <= usb_upload_count+1;
         ram_addr2 <= ram_addr2 + 1;
       end if;
-      fifo2_outbyte <= ram3_data2out(7 downto 0);
+      case ram_addr2(12 downto 11) is
+      when "00" => fifo2_outbyte <= ram0_data2out(7 downto 0);
+      when "01" => fifo2_outbyte <= ram1_data2out(7 downto 0);
+      when "10" => fifo2_outbyte <= ram2_data2out(7 downto 0);
+      -- when "11" => fifo2_outbyte <= ram3_data2out(7 downto 0);
+      when others => fifo2_outbyte <= ram3_data2out(7 downto 0);
+      end case;
     end if;
   end process;
 -----------------------------------------------------------------------
   -- Debugging counters.
---  process(CLK_50M) begin
---    if(rising_edge(CLK_50M)) then
---      if(fifo2_req_bug='0' and fifo2_req='1') then
---        fifo2_req_bugcount <= fifo2_req_bugcount + 1;
---      end if;
---      if(fifo2_ack_bug='0' and fifo2_ack='1') then
---        fifo2_ack_bugcount <= fifo2_ack_bugcount + 1;
---      end if;
---      fifo2_req_bug<= fifo2_req;
---      fifo2_ack_bug<= fifo2_ack;
---    end if;
---  end process;
   process(fifo2_req) begin
     if(rising_edge(fifo2_req)) then
       fifo2_req_bugcount <= fifo2_req_bugcount + 1;

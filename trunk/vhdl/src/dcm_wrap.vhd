@@ -1,4 +1,4 @@
--- $Id: dcm_wrap.vhd,v 1.4 2009/04/15 12:41:24 jrothwei Exp jrothwei $
+-- $Id: dcm_wrap.vhd,v 1.4 2009/04/15 12:41:24 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- 3/24/09: Trying 3/2 clock multiply, so the output clock is really 75MHz.
 -------------------------------------------------------------------------------
