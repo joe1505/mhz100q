@@ -1,4 +1,4 @@
--- $Id: fx2usb_async8b.vhd,v 1.6 2009/06/10 16:51:18 jrothwei Exp $
+-- $Id: fx2usb_async8b.vhd,v 1.7 2009/06/22 17:40:02 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Branch 12Mar2009.
 -- from usb_fifos.vhd 1.5 2009/03/04 02:21:17
@@ -90,6 +90,10 @@ entity fx2usb_async8b is
     fifo2_ack       : out STD_LOGIC;
     fifo2_outbyte   : in  STD_LOGIC_VECTOR(7 downto 0);
     fifo2_end       : in  STD_LOGIC;  -- Set to request a pktend signal.
+    fifo3_req       : in  STD_LOGIC := '0';
+    fifo3_ack       : out STD_LOGIC;
+    fifo3_outbyte   : in  STD_LOGIC_VECTOR(7 downto 0);
+    fifo3_end       : in  STD_LOGIC;  -- Set to request a pktend signal.
     muxed_bytecount : out STD_LOGIC_VECTOR(31 downto 0);
     mux_sel         : in  STD_LOGIC_VECTOR(1 downto 0);
     debugvec        : out STD_LOGIC_VECTOR(7 downto 0)
@@ -111,6 +115,9 @@ architecture rtl of fx2usb_async8b is
   signal fifo2_ack_i : STD_LOGIC;
   signal fifo2_ack_reset : STD_LOGIC;
   signal fifo2_bytecount_i  : STD_LOGIC_VECTOR(31 downto 0);
+  signal fifo3_ack_i : STD_LOGIC;
+  signal fifo3_ack_reset : STD_LOGIC;
+  signal fifo3_bytecount_i  : STD_LOGIC_VECTOR(31 downto 0);
   signal sequencer : STD_LOGIC_VECTOR(5 downto 0);   -- Counter to sequence the fifo signals.
   signal ifclk_div : STD_LOGIC_VECTOR(7 downto 0);   -- To divide down the USB clock.
 begin
@@ -129,11 +136,14 @@ begin
       muxed_bytecount  <= fifo0_bytecount_i;
     elsif(mux_sel="10") then
       muxed_bytecount  <= fifo2_bytecount_i;
+    elsif(mux_sel="11") then
+      muxed_bytecount  <= fifo3_bytecount_i;
     else
       muxed_bytecount  <= X"00000000";
     end if;
   end process;
   fifo2_ack <= fifo2_ack_i;
+  fifo3_ack <= fifo3_ack_i;
   fdata_oe       <= fdata_oe_i;
   ------------------------------------------
   -- Divide down the ifclk, as a quick fix.
@@ -240,6 +250,67 @@ begin
 	if(fifo2_ack_reset = '1') then
 		fifo2_ack_i <= '0';
 	end if;
+      ----------------------------------
+      -- Cases for IN fifo 3 writes.
+      -- Direct copy of the fifo2 case.
+      ----------------------------------
+      when "10111" =>    -- Set to write to fifo 3.
+        faddr_i <= "11";
+        sloe_i  <= '0';
+        slrd_i  <= '0';
+        slwr_i  <= '0';
+      when "11000" =>    -- Set to write to fifo 3.
+        -- Set up for a write if there is data to send and fifo is not full.
+	if( (fifo3_ack_i = '0')     -- Last transaction is complete.
+	    and (fifo3_req = '1') -- New output has been requested.
+	    and (flagb = '0')     -- Space is available in the fifo.
+          ) then
+	  fdata_out <= fifo3_outbyte; -- Put the data on the bus,
+	  fifo3_bytecount_i <= fifo3_bytecount_i + 1; -- For debugging.
+	  fdata_oe_i <= '1';
+	elsif( (fifo3_ack_i = '0')     -- Last transaction is complete.
+	    and (fifo3_end = '1') -- End-of-packet signal requested.
+	    and (flagb = '0')     -- Space is available in the fifo.
+          ) then
+	  fdata_oe_i <= '0';
+	  pktend_i <= '1';
+	else
+	  fdata_oe_i <= '0';
+	end if;
+        faddr_i <= "11";
+        sloe_i  <= '0';
+        slrd_i  <= '0';
+        slwr_i  <= '0';   -- Write cycle starts on the next clock.
+      when "11001" =>    -- Do the write.
+        debugvec <= faddr_i & slrd_i & slwr_i     & fifo3_req & fifo3_ack_i & flagb & flagc;
+        faddr_i <= "11";
+        sloe_i  <= '0';
+        slrd_i  <= '0';
+	if (fdata_oe_i = '1') then
+          slwr_i  <= '1';  
+	  fifo3_ack_i <= '1'; -- Signal that data has been captured.
+	else
+          slwr_i  <= '0';  
+	end if;
+      when "11010" =>    -- Write finished.
+        pktend_i <= '0';  -- De-assert (whether or not it was asserted).
+        faddr_i <= "11";
+        sloe_i  <= '0';
+        slrd_i  <= '0';
+        slwr_i  <= '0';
+	fdata_oe_i <= '0';
+      when "11011" => -- Stretch the ack length.
+	if(fifo3_req = '0') then
+		fifo3_ack_reset <= '1';
+	else
+		fifo3_ack_reset <= '0';
+	end if;
+      when "11100" =>
+	if(fifo3_ack_reset = '1') then
+		fifo3_ack_i <= '0';
+	end if;
+  ------------------------------------------------------
+  -- Default case, when nothing's happening.
       when others =>
         faddr_i <= "00";
         sloe_i  <= '0';
