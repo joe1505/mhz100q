@@ -1,4 +1,4 @@
-/* $Id: usb_writestring.c,v 1.3 2009/06/17 21:22:34 jrothwei Exp jrothwei $ */
+/* $Id: usb_writestring.c,v 1.4 2009/06/18 21:27:39 jrothwei Exp $ */
 /* Copyright 2009 Joseph Rothweiler **
 *************************************/
 /* Joseph Rothweiler, Sensicomm LLC. Started 17Mar2009. */
@@ -16,14 +16,41 @@
 #include <stdio.h>
 #include <usb.h>
 
+static double scalarcheck(
+  const mxArray *matval,  /* The input array to check. */
+  const int k,            /* Argument number, for debugging. */
+  const int mytype        /* 0: numeric, 1: for usb_dev_handle. */
+) {
+	int mrows, ncols;
+
+	if(mytype == 0) {
+		if(!mxIsNumeric(matval)) {
+			mexErrMsgIdAndTxt("USB:writestring","Argument %d must be numeric",k+1);
+		}
+	} else {
+		if(!mxIsUint64(matval)) {
+			mexErrMsgIdAndTxt("USB:writestring","Argument %d must be Uint64",k+1);
+		}
+	}
+	if(mxIsComplex(matval)) {
+		mexErrMsgIdAndTxt("USB:writestring","Argument %d must be noncomplex",k+1);
+	}
+	mrows = mxGetM(matval);
+	ncols = mxGetN(matval);
+	if(mrows!=1 || ncols != 1) {
+			mexErrMsgIdAndTxt("USB:writestring","Argument %d must be scalar",k+1);
+	}
+	return mxGetScalar(matval);
+}
+/*****************************************************************************/
 void mexFunction(
   int nlhs, mxArray *plhs[],
   int nrhs, const mxArray *prhs[]
 ) {
 	int k, p;
 
-	if(nrhs!=3) {
-		mexErrMsgIdAndTxt("USB:writestring","must have 3 arguments");
+	if( (nrhs<3) || (nrhs>4) ) {
+		mexErrMsgIdAndTxt("USB:writestring","must have 3 or 4 arguments");
 	}
 	if(nlhs>1) {
 		mexErrMsgIdAndTxt("USB:writestring","must have at most 1 result");
@@ -70,6 +97,15 @@ void mexFunction(
 	ep = mxGetScalar(prhs[k]);
 
 	/**********************************************
+	** Check the delay value. */
+
+	int usbtimeout = 10;
+	if(nrhs > 3) {
+		usbtimeout = scalarcheck(prhs[3],3,0);
+	}
+	// mexPrintf("Setting timeout to %d ms\n",usbtimeout);
+
+	/**********************************************
 	** Check and extract the string. Tricky:
 	** Matlab uses 16-bit chars (UTF-16, with only
 	** the 16-bit chars allowed? Essentially UCS-2? )
@@ -101,7 +137,7 @@ void mexFunction(
 	// mexPrintf("handle %x ep %d %x Output string %s\n",
 	// 	usbhandle,ep,ep, str);
 	int rtn;
-	rtn = usb_bulk_write(usbhandle,0x02,str,ncols,10); 
+	rtn = usb_bulk_write(usbhandle,0x02,str,ncols,usbtimeout); 
 	mxFree(str);
 
 	/* If there's a return value, return rtn. **

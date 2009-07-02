@@ -1,4 +1,4 @@
-# $Id: scope_nexys2_xc3s500e.ucf,v 1.10 2009/06/10 20:57:17 jrothwei Exp $
+# $Id: scope_nexys2_xc3s500e.ucf,v 1.11 2009/06/26 11:44:34 jrothwei Exp $
 # Copyright 2009 Joseph Rothweiler
 # Joseph Rothweiler, Sensicomm LLC. Started 17Feb2009.
 # http://www.sensicomm.com
@@ -105,7 +105,7 @@ NET "U_SLCS"     LOC = "T16" | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
 NET "U_FLAGA"    LOC = "V14" | IOSTANDARD = LVCMOS33 ;
 NET "U_FLAGB"    LOC = "U14" | IOSTANDARD = LVCMOS33 ;
 NET "U_FLAGC"    LOC = "V16" | IOSTANDARD = LVCMOS33 ;
-NET "U_IFCLK"    LOC = "T15" | IOSTANDARD = LVCMOS33 ;
+NET "U_IFCLK"    LOC = "T15" | IOSTANDARD = LVCMOS33 ; PERIOD = 20.8333ns; # 48.0 MHZ.
 NET "U_IFCLK" CLOCK_DEDICATED_ROUTE = FALSE;  # Xilinx WebPACK version 10+ needs this.
 NET "U_INT0"     LOC = "U15" | IOSTANDARD = LVCMOS33 ;
 NET "U_PKTEND"   LOC = "V12" | IOSTANDARD = LVCMOS33 ;
