@@ -1,4 +1,4 @@
-$Id:$
+$Id: README_SVN.txt,v 1.2 2009/07/06 19:15:54 jrothwei Exp jrothwei $
 Copyright 2009 Joseph Rothweiler
 
 Joseph Rothweiler
@@ -18,22 +18,36 @@ data acquistion, including
 - Drivers to access the USB interface from Octave
   and -eventually- from Matlab.
 
-Currently, it is in a preliminary state: Data can be
-captured and displayed, but many features are not
-working.
+As of July 2009 the FPGA firmware supports digitizing
+up to 4 channels at a 100 MHz sampling rate, optional
+downsampling before storing into a 2k sample buffer,
+and transfer of samples to an Octave program via USB.
 
-The project is hosted on Sourceforge. Some useful
-links:
+Several useful features - such as triggering on
+the waveform - are not yet implemented, and the
+currently posted PCB hardware design requires some
+minor modifications.
+
+The project is hosted on Sourceforge and licensed
+under the GPL. Some useful links:
 
 http://mhz100q.sourceforge.net/             - Homepage.
 http://www.sourceforge.net/projects/mhz100q - Project page.
 
-Code is maintained in a Subversion repository. I don't
-plan to release packages until it's in a more polished
-state.
-
-To download, you can either follow links from the homepage,
-go directly to the repostory to browse:
+Code is maintained in a Subversion repository.
+To browse:
 http://mhz100q.svn.sourceforge.net/viewvc/mhz100q/
-or get Subversion instructions at:
+
+Subversion download instructions are at:
 http://sourceforge.net/scm/?type=svn&group_id=258218
+
+Only the trunk subdirectory contains useful code.
+
+For installation and test instructions, follow the
+"Documentation" link on the homepage.
+
+Test using the command: octave -q -i mhz100q.m
+(by default, the program comes up in a test mode
+which does not require the A/D converter PCB.)
+To trigger a simulated conversion and display,
+just hit the 't' key on the keyboard.
