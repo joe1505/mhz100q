@@ -1,4 +1,4 @@
--- $Id: scope_top.vhd,v 1.32 2009/06/26 13:43:43 jrothwei Exp $
+-- $Id: scope_top.vhd,v 1.35 2009/07/21 02:01:52 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Started 16Feb2009.
 -- http://www.sensicomm.com
@@ -199,6 +199,12 @@ architecture rtl of scope_top is
     debugvec        : out STD_LOGIC_VECTOR(7 downto 0)
   );
   end component;
+  component edgetrig is Port (
+    clk      : in   STD_LOGIC;  -- system clock.
+    sig      : in  STD_LOGIC;
+    puls     : out STD_LOGIC
+  );
+  end component;
 
   signal U_FADDR_i   : STD_LOGIC_VECTOR(1 downto 0);
   signal U_SLRD_i    : STD_LOGIC;
@@ -365,6 +371,11 @@ architecture rtl of scope_top is
   signal up3_step      : STD_LOGIC_VECTOR( 7 downto 0);
   --
   signal reset_cmd : STD_LOGIC := '0'; -- from USB, so don't reset USB with it.
+  --
+  signal fifo2_composite_trigger : STD_LOGIC;
+  signal capture_end             : STD_LOGIC;
+  signal capture_end_50          : STD_LOGIC;
+  signal usb_capture_end_enable  : STD_LOGIC;
   --
   signal testsig_enable : STD_LOGIC := '0';
   signal testsig0       : STD_LOGIC_VECTOR(7 downto 0);
@@ -568,6 +579,11 @@ begin
     insig    => cic0_in3,
     outsig   => cic0_out3
   );
+    edgetrig0: edgetrig port map (
+    clk      => CLK_50M,
+    sig      => capture_end,
+    puls     => capture_end_50
+  );
   process(CLK_50M,fdata_oe,fdata_out,SW) begin
     -- Tristate control for the data lines.
     if(fdata_oe='1') then
@@ -603,6 +619,7 @@ begin
       if(bytecmd_strobes(4)='1') then red_dac_start      <= bytecmd_accum( 7 downto 0); end if; --  4:r
       if(bytecmd_strobes(5)='1') then cic_enable         <= bytecmd_accum(          0); end if; --  5:s
       if(bytecmd_strobes(5)='1') then testsig_enable     <= bytecmd_accum(          2); end if; --  5:s
+      if(bytecmd_strobes(5)='1') then usb_capture_end_enable <= bytecmd_accum(      1); end if; --  5:s
       usb_trigger_ad     <= bytecmd_strobes(6);                                                 --  6:t
       usb_trigger_upload <= bytecmd_strobes(7);                                                 --  7:u
       if(bytecmd_strobes(8)='1') then dacword            <= bytecmd_accum(11 downto 0); end if; --  8:v
@@ -816,25 +833,39 @@ begin
           ram_addr1 <= ram_addr1 + 1;
 	  if(cap_count = 0) then
 	    ad_capturing <= '0';
+	    capture_end <= '1';
 	  else
             cap_count <= cap_count - 1;
+	    capture_end <= '0';
           end if;
 	else
           ram_write1 <= '0';
+	  capture_end <= '0';
 	end if;
       elsif (ad_trigger='1') then
         ram_write1 <= '0';
         ad_capturing <= '1';
         cap_count <= cap_count_init;
+	capture_end <= '0';
       else
         ram_write1 <= '0';
+	capture_end <= '0';
       end if;
     end if;
   end process;
-  ad_trigger <= usb_trigger_ad_req OR BTN(1);
+  ad_trigger <= usb_trigger_ad_req OR btn_debounced(3);
   --------------------------------------------------
   -- Read from RAM Port B and send to host via USB.
   process(CLK_50M,reset_cmd) begin
+    if(rising_edge(CLK_50M)) then
+      fifo2_composite_trigger <=
+        btn_debounced(1)          -- Manual trigger.
+        or usb_trigger_upload_req -- Trigger via USB command.
+	-- When this line is enabled, upload on capture_end works,
+	-- but 100MHz sampling is erratic.
+        or ( capture_end_50 and usb_capture_end_enable ) -- Trigger on capture.
+	;
+    end if;
     -- This works, but messes up the high-speed data capture????
     -- if(reset_cmd = '1') then
     --   usb_upload_count <= (OTHERS => '0');
@@ -847,7 +878,11 @@ begin
         fifo2_req <= '0';
       elsif( (req_long="00000000") and (ack_long="00000000") ) then
         if (usb_upload_active='0') then
-          if ( (btn_debounced(0)='1') or (usb_trigger_upload_req='1') ) then
+          if ( fifo2_composite_trigger='1' ) then
+          --if (  (btn_debounced(0)='1')
+	  --   or (usb_trigger_upload_req='1')
+          --   or ( (capture_end='1') and (usb_capture_end_enable='1') ) -- Trigger on capture.
+	  --   ) then
             usb_upload_active <= '1';
           end if;
         else 
@@ -943,16 +978,10 @@ begin
   process(CLK_100M) begin
     if(rising_edge(CLK_100M)) then
       testsig0 <= testsig0 + 1;
-      if(testsig0(0)='1') then
-        testsig1 <= testsig1 + 1;
-      end if;
-      if(testsig1(1)='1') then
-        testsig2 <= testsig2 + 1;
-      end if;
-      if(testsig2(2)='1') then
-        testsig3 <= testsig3 + 1;
-      end if;
     end if;
+    testsig1 <= (not testsig0(7)) & testsig0(6 downto 0);
+    testsig2 <= testsig0(5) & testsig0(5) & testsig0(5 downto 0);
+    testsig3 <= "00" & testsig0(4) & "00000";
   end process;
 
 end rtl;
