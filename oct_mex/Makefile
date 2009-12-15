@@ -1,8 +1,9 @@
-# $Id: Makefile,v 1.5 2009/07/02 21:24:46 jrothwei Exp $
+# $Id: Makefile,v 1.6 2009/11/25 01:26:15 jrothwei Exp $
 # Copyright 2009 Joseph Rothweiler
 # For GNU make
 
-LIST = usb_opendev usb_writestring usb_readbytes kbhit_nowait
+LIST = usb_opendev usb_writestring usb_readbytes kbhit_nowait \
+       usb_int_readbytes usb_int_writestring usb_ctrl_msg
 
 all: $(LIST:%=mex/%.mex)
 

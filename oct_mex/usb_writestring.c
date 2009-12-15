@@ -1,14 +1,13 @@
-/* $Id: usb_writestring.c,v 1.4 2009/06/18 21:27:39 jrothwei Exp $ */
+/* $Id: usb_writestring.c,v 1.6 2009/12/15 16:22:25 jrothwei Exp $ */
 /* Copyright 2009 Joseph Rothweiler **
 *************************************/
 /* Joseph Rothweiler, Sensicomm LLC. Started 17Mar2009. */
 /* Creating a .mex file to open a USB device using libusb.
 ** Usage:
-**   usbdev = usb_writestring(usbdev,ep,string)
+**   usbdev = usb_writestring(usbdev,ep,string[,timeout[,do_int]])
 ** usbdev returns an integer value, which is the count
 ** of bytes actually sent.
 ** Values less than 0 indicate an error.
-** FIXME: Should include an optional delay argument.
 ** FIXME: should also support INT8_T and UINT8_T strings.
 */
 
@@ -49,7 +48,7 @@ void mexFunction(
 ) {
 	int k, p;
 
-	if( (nrhs<3) || (nrhs>4) ) {
+	if( (nrhs<3) || (nrhs>5) ) {
 		mexErrMsgIdAndTxt("USB:writestring","must have 3 or 4 arguments");
 	}
 	if(nlhs>1) {
@@ -60,51 +59,41 @@ void mexFunction(
 	** Check the device. */
 	int mrows, ncols;
 	k=0;
-	if(!mxIsUint64(prhs[k])) {
-		mexErrMsgIdAndTxt("USB:writestring","Argument %d must be Uint64",k+1);
-	}
-	if(mxIsComplex(prhs[k])) {
-		mexErrMsgIdAndTxt("USB:writestring","Argument %d must be noncomplex",k+1);
-	}
-	mrows = mxGetM(prhs[k]);
-	ncols = mxGetN(prhs[k]);
-	if(mrows!=1 || ncols != 1) {
-			mexErrMsgIdAndTxt("USB:writestring","Argument %d must be scalar",k+1);
-	}
 	struct usb_dev_handle *usbhandle;
-	UINT64_T *hvalp;
-	hvalp = mxGetData(prhs[k]);
+	UINT64_T hval;
+	hval = scalarcheck(prhs[k],k,1);
 
 	/* This assignment generates warnings about
 	 * pointer/integer size mismatch. */
-	usbhandle = (struct usb_dev_handle *)(*hvalp);
+	usbhandle = (struct usb_dev_handle *)(hval);
 
 	/**********************************************
 	** Check the endpoint. */
 	k=1;
-	if(!mxIsNumeric(prhs[k])) {
-		mexErrMsgIdAndTxt("USB:writestring","Argument %d must be numeric",k+1);
-	}
-	if(mxIsComplex(prhs[k])) {
-		mexErrMsgIdAndTxt("USB:writestring","Argument %d must be noncomplex",k+1);
-	}
-	mrows = mxGetM(prhs[k]);
-	ncols = mxGetN(prhs[k]);
-	if(mrows!=1 || ncols != 1) {
-			mexErrMsgIdAndTxt("USB:writestring","Argument %d must be scalar",k+1);
-	}
 	int ep;
-	ep = mxGetScalar(prhs[k]);
+	ep = scalarcheck(prhs[k],k,0);
 
 	/**********************************************
 	** Check the delay value. */
 
 	int usbtimeout = 10;
 	if(nrhs > 3) {
-		usbtimeout = scalarcheck(prhs[3],3,0);
+		k=3;
+		usbtimeout = scalarcheck(prhs[k],k,0);
 	}
 	// mexPrintf("Setting timeout to %d ms\n",usbtimeout);
 
+	/**********************************************
+	** Check the bulk/int flag. */
+
+	int do_int = 0;
+	if(nrhs > 4) {
+		k=4;
+		do_int = scalarcheck(prhs[k],k,0);
+	}
+	if( (do_int!=0) && (do_int!=1) ) {
+		mexErrMsgIdAndTxt("USB:writestring","Write type is %d. Must be 0(bulk) or 1(int)",do_int);
+	}
 	/**********************************************
 	** Check and extract the string. Tricky:
 	** Matlab uses 16-bit chars (UTF-16, with only
@@ -137,7 +126,11 @@ void mexFunction(
 	// mexPrintf("handle %x ep %d %x Output string %s\n",
 	// 	usbhandle,ep,ep, str);
 	int rtn;
-	rtn = usb_bulk_write(usbhandle,0x02,str,ncols,usbtimeout); 
+	if(do_int==0) {
+		rtn = usb_bulk_write(usbhandle,ep,str,ncols,usbtimeout); 
+	} else {
+		rtn = usb_interrupt_write(usbhandle,ep,str,ncols,usbtimeout); 
+	}
 	mxFree(str);
 
 	/* If there's a return value, return rtn. **
