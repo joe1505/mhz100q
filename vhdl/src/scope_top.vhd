@@ -1,4 +1,4 @@
--- $Id: scope_top.vhd,v 1.35 2009/07/21 02:01:52 jrothwei Exp $
+-- $Id: scope_top.vhd,v 1.38 2009/12/31 03:16:07 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Started 16Feb2009.
 -- http://www.sensicomm.com
@@ -205,6 +205,17 @@ architecture rtl of scope_top is
     puls     : out STD_LOGIC
   );
   end component;
+  component sineram_q16b is Port (
+    clock1   : in  STD_LOGIC;
+    addr1    : in  STD_LOGIC_VECTOR ( 9 downto 0);
+    data1out : out STD_LOGIC_VECTOR (15 downto 0);
+    --
+    clock2   : in  STD_LOGIC;
+    addr2    : in  STD_LOGIC_VECTOR ( 9 downto 0);
+    data2out : out STD_LOGIC_VECTOR (15 downto 0)
+  );
+  end component;
+
 
   signal U_FADDR_i   : STD_LOGIC_VECTOR(1 downto 0);
   signal U_SLRD_i    : STD_LOGIC;
@@ -214,7 +225,6 @@ architecture rtl of scope_top is
   signal U_INT0_i    : STD_LOGIC;
   signal U_PKTEND_i  : STD_LOGIC;
   signal ifcounter   : STD_LOGIC_VECTOR(27 downto 0);
-  signal data_enable : STD_LOGIC;  -- U_FDATA tristate line.
   signal slcs_enable : STD_LOGIC := '1';  -- U_SLCS tristate line. Set for now.
   --
   signal fifo0_hostbyte  : STD_LOGIC_VECTOR(7 downto 0);
@@ -300,6 +310,7 @@ architecture rtl of scope_top is
   signal ad_trigger     : STD_LOGIC;
   --
   signal btn_debounced  : STD_LOGIC_VECTOR(3 downto 0);
+  signal button0        : STD_LOGIC_VECTOR(1 downto 0);
   --
   signal usb_trigger_ad : STD_LOGIC;
   signal usb_trigger_ad_req : STD_LOGIC;
@@ -308,27 +319,15 @@ architecture rtl of scope_top is
   signal usb_trigger_upload_req : STD_LOGIC;
   signal usb_upload_count : STD_LOGIC_VECTOR(12 downto 0);
   signal usb_upload_active: STD_LOGIC;
-  signal usb_upload_state : STD_LOGIC_VECTOR(2 downto 0);
   --
   signal red_dac_val   : STD_LOGIC_VECTOR(3 downto 0);
   signal red_dac_count : STD_LOGIC_VECTOR(7 downto 0);
   signal red_dac_start : STD_LOGIC_VECTOR(7 downto 0) := "00000010";
   --
-  signal valcollect     : STD_LOGIC_VECTOR(31 downto 0);
-  --
   signal cmd_byte         : STD_LOGIC_VECTOR(7 downto 0);
-  signal cmd_byte_strobe  : STD_LOGIC;
-  signal cmd_byte_counter : STD_LOGIC_VECTOR(31 downto 0);
   --
-  signal fifo2_req_bug      : STD_LOGIC;
   signal fifo2_req_bugcount : STD_LOGIC_VECTOR(15 downto 0);
-  signal fifo2_ack_bug      : STD_LOGIC;
   signal fifo2_ack_bugcount : STD_LOGIC_VECTOR(15 downto 0);
-  --
-  signal fifo3_req_bug      : STD_LOGIC;
-  signal fifo3_req_bugcount : STD_LOGIC_VECTOR(15 downto 0);
-  signal fifo3_ack_bug      : STD_LOGIC;
-  signal fifo3_ack_bugcount : STD_LOGIC_VECTOR(15 downto 0);
   --
   signal cic_shift  : STD_LOGIC_VECTOR(4 downto 0);
   signal cic_enable : STD_LOGIC:= '0';
@@ -382,6 +381,13 @@ architecture rtl of scope_top is
   signal testsig1       : STD_LOGIC_VECTOR(7 downto 0);
   signal testsig2       : STD_LOGIC_VECTOR(7 downto 0);
   signal testsig3       : STD_LOGIC_VECTOR(7 downto 0);
+  -- 
+  signal mydds_counter : STD_LOGIC_VECTOR(11 downto 0);
+  signal mydds_flipflag: STD_LOGIC;
+  signal sineram_addr1 : STD_LOGIC_VECTOR( 9 downto 0);
+  signal sineram_addr2 : STD_LOGIC_VECTOR( 9 downto 0);
+  signal sineram_data1 : STD_LOGIC_VECTOR(15 downto 0);
+  signal sineram_data2 : STD_LOGIC_VECTOR(15 downto 0);
   -- Debugging only.
   signal ack_long : STD_LOGIC_VECTOR(7 downto 0);
   signal req_long : STD_LOGIC_VECTOR(7 downto 0);
@@ -584,7 +590,20 @@ begin
     sig      => capture_end,
     puls     => capture_end_50
   );
-  process(CLK_50M,fdata_oe,fdata_out,SW) begin
+    sineram0: sineram_q16b port map (
+    clock1   => CLK_50M,
+    addr1    => sineram_addr1,
+    data1out => sineram_data1,
+    --
+    clock2=> CLK_50M,
+    addr2=> sineram_addr2,
+    data2out=> sineram_data2
+  );
+  process(CLK_50M,fdata_oe,fdata_out,SW,
+    ad_capturing,usb_trigger_ad_req,usb_upload_active,
+    usb_trigger_upload_req,fifo2_req,fifo2_ack,
+    fifo3_trigger_upload,fifo3_req,fifo3_ack
+  ) begin
     -- Tristate control for the data lines.
     if(fdata_oe='1') then
       U_FDATA <= fdata_out;
@@ -598,9 +617,9 @@ begin
       when "000" => LED <=  "00" & ad_capturing & usb_trigger_ad_req &
                             "00" & usb_upload_active & usb_trigger_upload_req;
       when "001" => LED <= '0' & usb_trigger_upload_req & fifo2_req & fifo2_ack &
-                           usb_upload_active & usb_upload_state(2 downto 0);
+                           usb_upload_active & "000";
       when "010" => LED <= '0' & fifo3_trigger_upload   & fifo3_req & fifo3_ack &
-                           usb_upload_active & usb_upload_state(2 downto 0);
+                           usb_upload_active & "000";
       when "111" => LED <= "11111111";
       when OTHERS => LED <= "00000000";
     end case;
@@ -622,7 +641,7 @@ begin
       if(bytecmd_strobes(5)='1') then usb_capture_end_enable <= bytecmd_accum(      1); end if; --  5:s
       usb_trigger_ad     <= bytecmd_strobes(6);                                                 --  6:t
       usb_trigger_upload <= bytecmd_strobes(7);                                                 --  7:u
-      if(bytecmd_strobes(8)='1') then dacword            <= bytecmd_accum(11 downto 0); end if; --  8:v
+      -- if(bytecmd_strobes(8)='1') then dacword            <= bytecmd_accum(11 downto 0); end if; --  8:v
       if(bytecmd_strobes(9)='1') then fifo2_end          <= bytecmd_accum(          0); end if; --  9:w
       fifo3_trigger_upload <= bytecmd_strobes(10);                                              -- 10:x
       if(bytecmd_strobes(11)='1') then fifo3_end         <= bytecmd_accum(          0); end if; -- 11:y
@@ -680,16 +699,38 @@ begin
       dac_inclock <= dacdiv(3);
     end if;
     -----------------------------------------------------
-    -- Divide the 5 MHz clock by  500 to make a 10 kHz
-    -- timing pulse.
+    -- Divide the 5 MHz clock by
+    --  500 to make a  10 kHz
+    --   50 to make a 100 kHz
+    --   25 to make a 200 kHz
+    -- timing pulse. 
     if(falling_edge(dac_inclock)) then
       if(dacpulsediv="000000000") then
-        dacpulsediv <= conv_std_logic_vector(499,9);
+        dacpulsediv <= conv_std_logic_vector(24,9); -- division factor - 1.
 	dacpulse <= '1';
       else
         dacpulsediv <= dacpulsediv - 1;
 	dacpulse <= '0';
       end if;
+      if(dacpulse = '1') then
+        mydds_counter <= mydds_counter + 1;
+      end if;
+      mydds_flipflag <= mydds_counter(11);
+      if mydds_counter(10) = '0' then
+        sineram_addr1 <= mydds_counter(9 downto 0);
+      else
+        sineram_addr1 <= not mydds_counter(9 downto 0);
+      end if;
+      if mydds_flipflag = '0' then
+        dacword <= '1' & sineram_data1(15 downto 5);
+      else
+        dacword <= X"800" - ( '0' & sineram_data1(15 downto 5));
+      end if;
+      if button0="01" then
+        sineram_addr2 <= sineram_addr2 + 1;
+      end if;
+      button0 <= button0(0) & btn_debounced(0);
+      -- Start with 11 bits instead of 12.
     end if;
     -----------------------------------------------------
     -- For test, latch the output value from the switches.
@@ -728,7 +769,11 @@ begin
   end process;
   -- Display a lot of test information on the 4 7-segment displays.
   usb_mux_sel <= SW(3) & '0'; -- See cases 0011? and 0111? below.
-  process(CLK_50M,seg_segs,seg_digs,SW,valcollect,BTN) begin
+  process(CLK_50M,seg_segs,seg_digs,SW,BTN,
+    bytecmd_accum,muxed_bytecount,ram_addr1,ram_addr2,
+    fifo2_req_bugcount,fifo2_ack_bugcount,adc_data,dacword,cic_shift,
+    cic_decimax,red_dac_start,up3_count,up3_step,up3_val,btn_debounced
+  ) begin
     SEG7_SEG <= not seg_segs;
     SEG7_DIG <= not seg_digs;
     case SW(4 downto 0) is
@@ -756,6 +801,11 @@ begin
     when "10101"   => seg_word <= X"00"& red_dac_start;
     when "10110"   => seg_word <= up3_count;
     when "10111"   => seg_word <= up3_step & up3_val;
+    --
+    when "11000"   => seg_word <= "000000" & sineram_addr1;
+    when "11001"   => seg_word <=            sineram_data1;
+    when "11010"   => seg_word <= "000000" & sineram_addr2;
+    when "11011"   => seg_word <=            sineram_data2;
     --
     when "11100"   => seg_word <= X"0123";
     when "11101"   => seg_word <= X"4567";
@@ -798,7 +848,7 @@ begin
   end process;
   --------------------------------------------------
   -- Write the captured data into the on-chip RAM.
-  process(CLK_100M) begin
+  process(CLK_100M,cic_enable,cic3_down3) begin
     if(cic_enable='0') then
       samplecapture <= '1';  -- Capture on every 100MHz clock.
     else
@@ -910,7 +960,8 @@ begin
   end process;
   -----------------------------------------------------------------------
   -- Test upload to fifo3.
-  process(CLK_50M,bytecmd_accum,fifo3_req,fifo3_ack) begin
+  process(CLK_50M,bytecmd_accum,fifo3_req,fifo3_ack,
+    up3_val,ad_capturing,usb_trigger_ad_req,SW,cap_count) begin
     -- Load the registers from the strobes. This works, except
     -- the first byte isn't correct.
     if(rising_edge(CLK_50M)) then
@@ -975,7 +1026,7 @@ begin
     VGA_HS <= red_dac_val(3); -- Just for debug and timing check.
   end process;
   --------------------------------------------------
-  process(CLK_100M) begin
+  process(CLK_100M,testsig0) begin
     if(rising_edge(CLK_100M)) then
       testsig0 <= testsig0 + 1;
     end if;

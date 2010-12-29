@@ -1,9 +1,9 @@
--- $Id: ex8from32.vhd,v 1.2 2009/04/20 19:20:48 jrothwei Exp $
+-- $Id: ex8from32.vhd,v 1.4 2010/05/20 21:23:55 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Started 20Apr2009.
 -- http://www.sensicomm.com
 -------------------------------------------------------------------------------
--- C equivalent: data_out = 0xff & (data_in << leftpos);
+-- C equivalent: data_out = 0xff & (data_in >> leftpos);
 -- Valid leftpos range is 0 to 24, so 5 bits needed to represent leftpos.
 -------------------------------------------------------------------------------
 library IEEE;
@@ -22,7 +22,7 @@ end ex8from32;
 architecture rtl of ex8from32 is
   signal intermed : STD_LOGIC_VECTOR(22 downto 0);
 begin
-  process(data_in,leftpos) begin
+  process(data_in,leftpos,intermed) begin
     if(leftpos(4)='1') then
       for k in 22 downto 16 loop
         intermed(k) <= data_in(31);
@@ -48,7 +48,11 @@ begin
     when "1101" =>  data_out <= intermed(20 downto 13);
     when "1110" =>  data_out <= intermed(21 downto 14);
     when "1111" =>  data_out <= intermed(22 downto 15);
-    when others =>  data_out <= intermed( 7 downto  0); -- Should never happen.
+    -- Without the OTHERS, I get an error:
+    -- "A value is missing in case."
+    -- With it, I get a warning:
+    -- "Mux is complete: default of case is discarded."
+    when OTHERS =>  data_out <= intermed( 7 downto  0); -- Should never happen.
     end case;
   end process;
 end rtl;

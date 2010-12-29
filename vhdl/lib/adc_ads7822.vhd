@@ -1,4 +1,5 @@
--- $Id: adc_ads7822.vhd,v 1.2 2009/03/26 20:00:43 jrothwei Exp $
+-- $Id: adc_ads7822.vhd,v 1.3 2009/04/15 12:41:46 jrothwei Exp $
+-- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC Started 05Mar2009.
 -- Interface to the TI ADS7822 12-bit ADC.
 --
