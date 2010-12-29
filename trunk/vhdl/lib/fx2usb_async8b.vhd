@@ -1,4 +1,4 @@
--- $Id: fx2usb_async8b.vhd,v 1.7 2009/06/22 17:40:02 jrothwei Exp $
+-- $Id: fx2usb_async8b.vhd,v 1.8 2009/07/23 21:04:54 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC. Branch 12Mar2009.
 -- from usb_fifos.vhd 1.5 2009/03/04 02:21:17
@@ -118,8 +118,8 @@ architecture rtl of fx2usb_async8b is
   signal fifo3_ack_i : STD_LOGIC;
   signal fifo3_ack_reset : STD_LOGIC;
   signal fifo3_bytecount_i  : STD_LOGIC_VECTOR(31 downto 0);
-  signal sequencer : STD_LOGIC_VECTOR(5 downto 0);   -- Counter to sequence the fifo signals.
-  signal ifclk_div : STD_LOGIC_VECTOR(7 downto 0);   -- To divide down the USB clock.
+  signal sequencer : STD_LOGIC_VECTOR(4 downto 0);   -- Counter to sequence the fifo signals.
+  signal ifclk_div : STD_LOGIC_VECTOR(2 downto 0);   -- To divide down the USB clock.
 begin
   -- These are unused for now.
   int0   <= '0';
@@ -131,7 +131,7 @@ begin
   sloe           <= sloe_i;
   faddr          <= faddr_i;
   fifo0_ack <= fifo0_ack_i;
-  process(mux_sel) begin
+  process(mux_sel,fifo0_bytecount_i,fifo2_bytecount_i,fifo3_bytecount_i) begin
     if(mux_sel="00") then
       muxed_bytecount  <= fifo0_bytecount_i;
     elsif(mux_sel="10") then

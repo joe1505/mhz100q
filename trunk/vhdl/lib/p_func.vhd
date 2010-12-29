@@ -1,4 +1,4 @@
--- $Id: p_func.vhd,v 1.2 2009/04/15 12:42:04 jrothwei Exp $
+-- $Id: p_func.vhd,v 1.3 2009/07/23 20:33:28 jrothwei Exp $
 -- Copyright 2009 Joseph Rothweiler
 -- Branch of miscpack.vhd,v 2.0 2007/05/30 17:46:33
 
@@ -52,6 +52,10 @@ package body p_func is
         when "1101" => return "1011110" ; -- d
         when "1110" => return "1111001" ; -- E
         when "1111" => return "1110001" ; -- F
+	-- Without the OTHERS, I get an error:
+	-- "A value is missing in case."
+	-- With it, I get a warning:
+	-- "Mux is complete: default of case is discarded."
         when OTHERS => return "0000000" ; -- Should not happen.
       end case;
     end hex_to_7seg;

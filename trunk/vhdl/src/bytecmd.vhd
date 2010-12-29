@@ -1,4 +1,4 @@
--- $Id: bytecmd.vhd,v 1.4 2009/06/22 17:15:42 jrothwei Exp $
+-- $Id: bytecmd.vhd,v 1.5 2009/07/23 20:51:50 jrothwei Exp $
 -- Joseph Rothweiler, Sensicomm LLC. Started 11Jun2009.
 -- Copyright 2009 Joseph Rothweiler
 -------------------------------------------------------------------------------
@@ -121,7 +121,8 @@ begin
       hexdigit <= "1001" + byte_save(3 downto 0) ; -- (byte-0x61+10) => (byte%8)+9.
       digitflag <= '1';
     else
-      -- hexdigit <= "0000"; -- Don't care about the value in this case.
+      -- Get a warning about generating a latch without this line.
+      hexdigit <= "0000"; -- Don't care about the value in this case.
       digitflag <= '0';
     end if;
     if(byte_save=X"2b") then flag_plus <= '1'; else flag_plus <= '0'; end if; -- '+'

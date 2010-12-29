@@ -1,4 +1,5 @@
--- $Id: dac_mcp492x.vhd,v 1.2 2009/03/05 21:47:30 jrothwei Exp $
+-- $Id: dac_mcp492x.vhd,v 1.3 2009/04/15 12:41:54 jrothwei Exp $
+-- Copyright 2009 Joseph Rothweiler
 -- Joseph Rothweiler, Sensicomm LLC Started 23Feb2009.
 -- Interface to the MCP4921 12-bit DAC.
 --
