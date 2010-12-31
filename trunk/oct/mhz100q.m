@@ -2,7 +2,7 @@
 % Starting to build a command-line controller.
 
 global RCSID;
-RCSID="$Id: mhz100q.m,v 1.5 2009/07/06 19:22:54 jrothwei Exp jrothwei $";
+RCSID="$Id: mhz100q.m,v 1.6 2010/01/08 22:51:18 jrothwei Exp $";
 1;  %
 function y = testit(x)
 	y=2*x;
@@ -19,6 +19,8 @@ function bigreset(usbdev)
 
 end
 function showsignal(bytes)
+  global mhz100q;
+  mhz100q.signalbytes = bytes;
   plotlen = 512;
   plotoff = 0;
   x=plotoff:(plotoff+plotlen-1);
@@ -36,6 +38,20 @@ function showsignal(bytes)
       plot(x,sig(2048+idx),'g');
       plot(x,sig(4096+idx),'b');
       plot(x,sig(6144+idx),'m');
+    hold off;
+    sp0 = fft(sig(   0+idx));
+    sp1 = fft(sig(2048+idx));
+    sp2 = fft(sig(4096+idx));
+    sp3 = fft(sig(6144+idx));
+    spx=1:plotlen/2;
+    spf = (spx-1)*100/plotlen;
+    figure(2);
+    clf;
+    hold on;
+      plot(spf,20*log10(abs(sp0(spx))),'r');
+      plot(spf,20*log10(abs(sp1(spx))),'g');
+      plot(spf,20*log10(abs(sp2(spx))),'b');
+      plot(spf,20*log10(abs(sp3(spx))),'m');
     hold off;
   end
 end
@@ -123,6 +139,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Start of script.
 global mhz100q;
+wfilenum=0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open the USB device.
@@ -137,6 +154,7 @@ usb_writestring(usbdev,2,"+1fr");
 
 mhz100q.autoupload = 1;
 mhz100q.testsignal = 1;
+mhz100q.signalbytes = [];
 setdownsample(0);  % full speed.
 setupshift(0);
 
@@ -162,12 +180,17 @@ while 1
     case '?'
       fprintf(2,'Help command\n');
       fprintf(2,'0-9,a-f Hex characters\n');
+      fprintf(2,'+ Start positive number\n');
+      fprintf(2,'- Start negative number\n');
       fprintf(2,'? Print this help\n');
       fprintf(2,'t Trigger a single capture\n');
       fprintf(2,'u Trigger a USB upload\n');
+      fprintf(2,'v Set DAC step: (2**32)*(freq/200KHz).\n');
       fprintf(2,'x Trigger a status upload\n');
       fprintf(2,'F Set downsampling factor (0 to 1f)\n');
       fprintf(2,'S Set downsampling shift (gain) factor (0 to 1f)\n');
+      fprintf(2,'Q Set testsignal on(1) or off(0)\n');
+      fprintf(2,'W Save displayed data to a file\n');
       printcurrent;
     case char(4) % ^D.
       fprintf(2,'Ctrl-D exit\n');
@@ -179,6 +202,8 @@ while 1
       usb_writestring(usbdev,2,'t');
     case 'u'
       usb_writestring(usbdev,2,'u');
+    case 'v'
+      usb_writestring(usbdev,2,sprintf('+%xv',cmdval));
     case 'x'
       usb_writestring(usbdev,2,'01000020x');
       sleep(0.1);
@@ -201,6 +226,26 @@ while 1
     case 'S'
       fprintf(2,'S : sign %d val %d mix %d\n',cmdvalsign,cmdval,cmdvalsign*typecast(cmdval,'int32'));
       setupshift(cmdvalsign*typecast(cmdval,'int32'));
+    case 'Q'
+      if(cmdval==1)
+        mhz100q.testsignal = 1;
+      else
+        mhz100q.testsignal = 0;
+      end
+      setdownsample(mhz100q.downfactor);
+    case 'W'
+      wfilenum=wfilenum+1;
+      wname=sprintf('/tmp/mhz100q_%d.raw',wfilenum);
+      [wfil,msg]=fopen(wname,'wb','native');
+      if (wfil<0)
+        warning('Failed opening %s. Message %s',wname,msg);
+      else
+        size(mhz100q.signalbytes)
+        n=fwrite(wfil,mhz100q.signalbytes);
+	fprintf(1,'Wrote %d to %s\n',n,wname);
+	fclose(wfil);
+	dir(wname);
+      end
     otherwise
       chr = toascii(c1);
       if  ( (chr >= toascii('0')) && (chr <= toascii('9') ) )
