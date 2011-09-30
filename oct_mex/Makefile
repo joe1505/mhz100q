@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2009/11/25 01:26:15 jrothwei Exp $
+# $Id: Makefile,v 1.7 2011/01/03 01:14:48 jrothwei Exp jrothwei $
 # Copyright 2009 Joseph Rothweiler
 # For GNU make
 
@@ -13,9 +13,12 @@ oldstuff: mex/mex1.mex mex/firstmexdemo.mex mex/oct_myfunc.mex \
 
 mex/%.mex: %.c
 	mkdir -p mex
-	mkoctfile -Wall --mex -o $@ $< -lusb
+	# mkoctfile adds a huge number of library dependencies
+	# to the mex-file (ldd shows them). --as-needed minimizes this.
+	mkoctfile -Wall -Wl,--as-needed --mex -o $@ $< -lusb
 
 # Remove intermediate files:
-# Could just do: rm -vf $(LIST:%=%.o)
+# Could just do: rm -vf $(LIST:%=%.o) , but this way avoids
+# warnings without overriding protections.
 clean:
 	$(foreach x,$(LIST), test -e $x.o && rm -v $x.o;) true
