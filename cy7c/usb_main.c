@@ -1,4 +1,4 @@
-/* $Id: usb_main.c,v 1.2 2009/02/27 20:26:02 jrothwei Exp $ */
+/* $Id: usb_main.c,v 1.3 2009/06/22 16:14:16 jrothwei Exp $ */
 /* Joseph Rothweiler, Sensicomm LLC. Started 16Feb2009. */
 /* http://www.sensicomm.com
 **
@@ -105,35 +105,21 @@ void td_init(void) {
 	SYNCDELAY;
 	EP2CFG = 0xa2;  /* Out, bulk, 512, 2x */
 	SYNCDELAY;
-	FIFORESET = 0x80; /* Set NAK's to everything. */
+	EP4CFG = 0xa0;  /* Out, bulk, 512, 2x */
 	SYNCDELAY;
-	FIFORESET = 0x82; /* Reset EP2. */
+	EP6CFG = 0xe2;  /* In, bulk, 512, 2x */
 	SYNCDELAY;
-	FIFORESET = 0x00; /* un-NAK. */
-	SYNCDELAY;
-	OUTPKTEND = 0x82; /* Arm both EP2 buffers to "prime the pump." */
-	SYNCDELAY;
-	OUTPKTEND = 0x82; /* Arm both EP2 buffers to "prime the pump." */
+	EP8CFG = 0xe0;  /* In, bulk, 512, 2x */
 	SYNCDELAY;
 	EP2FIFOCFG = 0x10; /* Autoout = 1, autoin = 0, zerolen = 0, wordwide = 0 */
 	SYNCDELAY;
+	//EP6FIFOCFG = 0x0C; /* Autoout = 0, autoin = 1, zerolen = 1, wordwide = 0 */
+	EP6FIFOCFG = 0x08; /* Autoout = 0, autoin = 1, zerolen = 0, wordwide = 0 */
+	SYNCDELAY;
+	// Testing.
+	EP8FIFOCFG = 0x08; /* Autoout = 0, autoin = 1, zerolen = 0, wordwide = 0 */
+	SYNCDELAY;
 
-	EP6CFG = 0xe2;  /* In, bulk, 512, 2x */
-	SYNCDELAY;
-	FIFORESET = 0x80; /* NAK's. */
-	SYNCDELAY;
-	FIFORESET = 0x82; /* Reset. */
-	SYNCDELAY;
-	FIFORESET = 0x84; /* Reset. */
-	SYNCDELAY;
-	FIFORESET = 0x86; /* Reset. */
-	SYNCDELAY;
-	FIFORESET = 0x88; /* Reset. */
-	SYNCDELAY;
-	FIFORESET = 0x00; /* un-NAK */
-	SYNCDELAY;
-	EP6FIFOCFG = 0x0C; /* Autoout = 0, autoin = 1, zerolen = 1, wordwide = 0 */
-	SYNCDELAY;
 	PINFLAGSAB = 0x00; /* A prog=level, B full, C empty */
 	SYNCDELAY;
 	PINFLAGSCD = 0x00; /* A prog=level, B full, C empty */
@@ -146,9 +132,35 @@ void td_init(void) {
 	SYNCDELAY;
 	EP6AUTOINLENL = 0x00;
 	SYNCDELAY;
-	EP6FIFOPFH = 0x80;  /* FLAGA level. */
+	EP6FIFOPFH = 0x00;  /* FLAGA level. */
 	SYNCDELAY;
-	EP6FIFOPFL = 0x00;
+	EP6FIFOPFL = 0x80;
+	SYNCDELAY;
+	// Testing.
+	EP8AUTOINLENH = 0x02;  /* Autocommit 512-byte pkts. */
+	SYNCDELAY;
+	EP8AUTOINLENL = 0x00;
+	SYNCDELAY;
+	EP8FIFOPFH = 0x00;  /* FLAGA level. */
+	SYNCDELAY;
+	EP8FIFOPFL = 0x80;
+	SYNCDELAY;
 
+	FIFORESET = 0x80; /* NAK's. */
+	SYNCDELAY;
+	FIFORESET = 0x82; /* Reset. */
+	SYNCDELAY;
+	FIFORESET = 0x84; /* Reset. */
+	SYNCDELAY;
+	FIFORESET = 0x06; /* Reset. ?? */
+	SYNCDELAY;
+	FIFORESET = 0x08; /* Reset. ?? */
+	SYNCDELAY;
+	FIFORESET = 0x00; /* un-NAK */
+	SYNCDELAY;
+
+	OUTPKTEND = 0x82; /* Arm both EP2 buffers to "prime the pump." */
+	SYNCDELAY;
+	OUTPKTEND = 0x82; /* Arm both EP2 buffers to "prime the pump." */
 	SYNCDELAY;
 }
