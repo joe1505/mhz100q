@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2011/01/03 01:14:48 jrothwei Exp jrothwei $
+# $Id: Makefile,v 1.7 2011/01/03 01:14:48 jrothwei Exp $
 # Copyright 2009 Joseph Rothweiler
 # For GNU make
 
