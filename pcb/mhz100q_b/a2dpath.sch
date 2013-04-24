@@ -1,0 +1,620 @@
+EESchema Schematic File Version 2  date Wed 19 Jan 2011 10:34:23 AM EST
+LIBS:power,0jr-working,0jr_rf,0jr-miscparts,0jravr,0jr3,0jr2,device,conn,linear,regul,74xx,cmos4000,adc-dac,memory,xilinx,special,microcontrollers,dsp,microchip,analog_switches,motorola,texas,intel,audio,interface,digital-audio,philips,display,cypress,siliconi,contrib,valves,./mhz100q_b.cache
+EELAYER 24  0
+EELAYER END
+$Descr A4 11700 8267
+Sheet 5 5
+Title ""
+Date "18 jan 2011"
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Connection ~ 7000 6150
+Wire Wire Line
+	7000 6150 7000 6200
+Connection ~ 7450 6700
+Wire Wire Line
+	7000 6600 7000 6700
+Wire Wire Line
+	7000 6700 8400 6700
+Wire Notes Line
+	3600 4500 4900 4500
+Wire Notes Line
+	3600 4500 3600 5700
+Wire Notes Line
+	3600 5700 4900 5700
+Wire Notes Line
+	4900 5700 4900 4500
+Wire Wire Line
+	7450 6200 7450 6050
+Wire Wire Line
+	8450 5800 8300 5800
+Wire Wire Line
+	8300 5800 8300 6150
+Wire Wire Line
+	8300 6150 7950 6150
+Connection ~ 8400 6700
+Wire Wire Line
+	8400 6750 8400 5900
+Wire Wire Line
+	7900 4700 7950 4700
+Wire Wire Line
+	7950 4700 7950 4900
+Wire Wire Line
+	5550 4800 6250 4800
+Wire Wire Line
+	3450 4800 3650 4800
+Connection ~ 4250 4800
+Wire Wire Line
+	4250 4900 4250 4800
+Wire Wire Line
+	4850 4800 5050 4800
+Connection ~ 5250 4950
+Wire Wire Line
+	5250 4950 5250 4800
+Wire Wire Line
+	5450 4800 5450 4950
+Wire Wire Line
+	5750 5400 5750 5350
+Wire Wire Line
+	6550 5150 6550 5100
+Wire Wire Line
+	6550 5550 6550 5650
+Wire Wire Line
+	6850 5000 6850 4300
+Connection ~ 6850 5800
+Wire Wire Line
+	6850 5200 6850 5800
+Connection ~ 8050 5000
+Wire Wire Line
+	7950 4300 8050 4300
+Wire Wire Line
+	8050 4300 8050 5000
+Wire Wire Line
+	9650 4550 8400 4550
+Wire Wire Line
+	8400 4550 8400 5500
+Wire Wire Line
+	8400 5500 8450 5500
+Wire Wire Line
+	9750 5150 9750 5250
+Wire Wire Line
+	9350 6100 9600 6100
+Wire Wire Line
+	9350 5900 9600 5900
+Wire Wire Line
+	9350 5700 9600 5700
+Wire Wire Line
+	9350 5500 9600 5500
+Wire Wire Line
+	7650 5000 8300 5000
+Wire Wire Line
+	8300 5000 8300 5200
+Wire Wire Line
+	8300 5200 8450 5200
+Connection ~ 9450 5100
+Wire Wire Line
+	9350 5100 9450 5100
+Wire Wire Line
+	7250 5450 7250 5550
+Connection ~ 8400 6000
+Wire Wire Line
+	8450 6000 8400 6000
+Wire Wire Line
+	8400 5900 8450 5900
+Wire Wire Line
+	8400 6100 8450 6100
+Connection ~ 8400 6100
+Wire Wire Line
+	7250 4750 7250 4700
+Wire Wire Line
+	9350 5200 9450 5200
+Wire Wire Line
+	7650 5200 8250 5200
+Wire Wire Line
+	8250 5200 8250 5100
+Wire Wire Line
+	8250 5100 8450 5100
+Wire Wire Line
+	9350 5400 9600 5400
+Wire Wire Line
+	9350 5600 9600 5600
+Wire Wire Line
+	9350 5800 9600 5800
+Wire Wire Line
+	9350 6000 9600 6000
+Wire Wire Line
+	9450 5200 9450 4750
+Wire Wire Line
+	9450 4750 9750 4750
+Wire Wire Line
+	9650 4450 8450 4450
+Wire Wire Line
+	8450 4450 8450 5000
+Wire Wire Line
+	7900 5800 8050 5800
+Wire Wire Line
+	8050 5800 8050 5200
+Connection ~ 8050 5200
+Wire Wire Line
+	7400 5800 6750 5800
+Wire Wire Line
+	6850 4300 7450 4300
+Wire Wire Line
+	6250 5800 6150 5800
+Wire Wire Line
+	6150 5800 6150 5900
+Wire Wire Line
+	6750 4800 6850 4800
+Connection ~ 6850 4800
+Wire Wire Line
+	5150 4800 5150 4950
+Wire Wire Line
+	5150 4950 5450 4950
+Wire Wire Line
+	5350 4800 5350 4950
+Connection ~ 5350 4950
+Wire Wire Line
+	5300 4950 5300 5050
+Connection ~ 5300 4950
+Wire Wire Line
+	4150 4800 4350 4800
+Wire Wire Line
+	4250 5550 4250 5400
+Wire Wire Line
+	3250 5000 3250 5150
+Wire Wire Line
+	5750 4850 5750 4800
+Connection ~ 5750 4800
+Wire Wire Line
+	6350 5100 6850 5100
+Connection ~ 6550 5100
+Wire Wire Line
+	5950 6150 5950 4700
+Wire Wire Line
+	5950 4700 7500 4700
+Connection ~ 7250 4700
+Connection ~ 5950 6150
+Wire Wire Line
+	7450 6700 7450 6600
+Wire Wire Line
+	8100 6600 8100 6700
+Connection ~ 8100 6700
+Wire Wire Line
+	8100 6200 8100 6150
+Connection ~ 8100 6150
+Wire Wire Line
+	7450 6150 5700 6150
+Connection ~ 7450 6150
+Wire Wire Line
+	8450 5700 8250 5700
+Wire Wire Line
+	8250 5700 8250 6050
+Wire Wire Line
+	8250 6050 7450 6050
+Wire Wire Line
+	8450 5600 8200 5600
+Wire Wire Line
+	8200 5600 8200 6000
+Wire Wire Line
+	8200 6000 7050 6000
+Wire Wire Line
+	7050 6000 7050 6150
+Connection ~ 7050 6150
+$Comp
+L C C18
+U 1 1 4D155E56
+P 7000 6400
+AR Path="/4D151E4A/4D155E56" Ref="C18"  Part="1" 
+AR Path="/4D1529FF/4D155E56" Ref="C9"  Part="1" 
+AR Path="/4D154E46/4D155E56" Ref="C5"  Part="1" 
+AR Path="/4D154EB4/4D155E56" Ref="C7"  Part="1" 
+F 0 "C7" H 7050 6500 50  0000 L CNN
+F 1 "0.1" H 7050 6300 50  0000 L CNN
+F 2 "SM0805" H 7050 6200 60  0001 C CNN
+	1    7000 6400
+	1    0    0    -1  
+$EndComp
+Text Notes 3150 5800 0    60   ~ 0
+Impedance matching network not used.
+Text Notes 7050 7150 0    60   ~ 0
+LMH6551MM used instead of AD8138.
+$Comp
+L GND #PWR050
+U 1 1 4D1525FC
+P 7950 4900
+AR Path="/4D151E4A/4D1525FC" Ref="#PWR050"  Part="1" 
+AR Path="/4D1529FF/4D1525FC" Ref="#PWR040"  Part="1" 
+AR Path="/4D154E46/4D1525FC" Ref="#PWR030"  Part="1" 
+AR Path="/4D154EB4/4D1525FC" Ref="#PWR020"  Part="1" 
+F 0 "#PWR050" H 7950 4900 30  0001 C CNN
+F 1 "GND" H 7950 4830 30  0001 C CNN
+	1    7950 4900
+	1    0    0    -1  
+$EndComp
+Text HLabel 5700 6150 0    60   Input ~ 0
+Vaa
+Text HLabel 7950 6150 0    60   Input ~ 0
+Vcc
+$Comp
+L C C22
+U 1 1 4D1524C1
+P 7450 6400
+AR Path="/4D151E4A/4D1524C1" Ref="C22"  Part="1" 
+AR Path="/4D1529FF/4D1524C1" Ref="C24"  Part="1" 
+AR Path="/4D154E46/4D1524C1" Ref="C26"  Part="1" 
+AR Path="/4D154EB4/4D1524C1" Ref="C27"  Part="1" 
+F 0 "C27" H 7500 6500 50  0000 L CNN
+F 1 "0.1" H 7500 6300 50  0000 L CNN
+F 2 "SM0805" H 7500 6200 60  0001 C CNN
+	1    7450 6400
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C14
+U 1 1 4D1524A6
+P 8100 6400
+AR Path="/4D151E4A/4D1524A6" Ref="C14"  Part="1" 
+AR Path="/4D1529FF/4D1524A6" Ref="C19"  Part="1" 
+AR Path="/4D154E46/4D1524A6" Ref="C21"  Part="1" 
+AR Path="/4D154EB4/4D1524A6" Ref="C23"  Part="1" 
+F 0 "C23" H 8150 6500 50  0000 L CNN
+F 1 "0.1" H 8150 6300 50  0000 L CNN
+F 2 "SM0805" H 8150 6200 60  0001 C CNN
+	1    8100 6400
+	1    0    0    -1  
+$EndComp
+Text HLabel 6350 5100 0    60   Input ~ 0
+Vcm
+$Comp
+L GND #PWR051
+U 1 1 4D1523F8
+P 3250 5150
+AR Path="/4D151E4A/4D1523F8" Ref="#PWR051"  Part="1" 
+AR Path="/4D1529FF/4D1523F8" Ref="#PWR041"  Part="1" 
+AR Path="/4D154E46/4D1523F8" Ref="#PWR031"  Part="1" 
+AR Path="/4D154EB4/4D1523F8" Ref="#PWR021"  Part="1" 
+F 0 "#PWR051" H 3250 5150 30  0001 C CNN
+F 1 "GND" H 3250 5080 30  0001 C CNN
+	1    3250 5150
+	1    0    0    -1  
+$EndComp
+$Comp
+L COAXIAL_SG J8
+U 1 1 4D1523D4
+P 3250 4800
+AR Path="/4D151E4A/4D1523D4" Ref="J8"  Part="1" 
+AR Path="/4D1529FF/4D1523D4" Ref="J10"  Part="1" 
+AR Path="/4D154E46/4D1523D4" Ref="J9"  Part="1" 
+AR Path="/4D154EB4/4D1523D4" Ref="J11"  Part="1" 
+F 0 "J11" H 3400 4700 60  0000 C CNN
+F 1 "COAXIAL_SG" H 3250 4900 60  0000 C CNN
+F 2 "SMA_EDGE2G" H 3250 4800 60  0001 C CNN
+	1    3250 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR052
+U 1 1 4D152380
+P 4250 5550
+AR Path="/4D151E4A/4D152380" Ref="#PWR052"  Part="1" 
+AR Path="/4D1529FF/4D152380" Ref="#PWR042"  Part="1" 
+AR Path="/4D154E46/4D152380" Ref="#PWR032"  Part="1" 
+AR Path="/4D154EB4/4D152380" Ref="#PWR022"  Part="1" 
+F 0 "#PWR052" H 4250 5550 30  0001 C CNN
+F 1 "GND" H 4250 5480 30  0001 C CNN
+	1    4250 5550
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR053
+U 1 1 4D1522AD
+P 5750 5400
+AR Path="/4D151E4A/4D1522AD" Ref="#PWR053"  Part="1" 
+AR Path="/4D1529FF/4D1522AD" Ref="#PWR043"  Part="1" 
+AR Path="/4D154E46/4D1522AD" Ref="#PWR033"  Part="1" 
+AR Path="/4D154EB4/4D1522AD" Ref="#PWR023"  Part="1" 
+F 0 "#PWR053" H 5750 5400 30  0001 C CNN
+F 1 "GND" H 5750 5330 30  0001 C CNN
+	1    5750 5400
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR054
+U 1 1 4D152217
+P 6150 5900
+AR Path="/4D151E4A/4D152217" Ref="#PWR054"  Part="1" 
+AR Path="/4D1529FF/4D152217" Ref="#PWR044"  Part="1" 
+AR Path="/4D154E46/4D152217" Ref="#PWR034"  Part="1" 
+AR Path="/4D154EB4/4D152217" Ref="#PWR024"  Part="1" 
+F 0 "#PWR054" H 6150 5900 30  0001 C CNN
+F 1 "GND" H 6150 5830 30  0001 C CNN
+	1    6150 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR055
+U 1 1 4D152213
+P 6550 5650
+AR Path="/4D151E4A/4D152213" Ref="#PWR055"  Part="1" 
+AR Path="/4D1529FF/4D152213" Ref="#PWR045"  Part="1" 
+AR Path="/4D154E46/4D152213" Ref="#PWR035"  Part="1" 
+AR Path="/4D154EB4/4D152213" Ref="#PWR025"  Part="1" 
+F 0 "#PWR055" H 6550 5650 30  0001 C CNN
+F 1 "GND" H 6550 5580 30  0001 C CNN
+	1    6550 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C15
+U 1 1 4D1520DD
+P 7700 4700
+AR Path="/4D151E4A/4D1520DD" Ref="C15"  Part="1" 
+AR Path="/4D1529FF/4D1520DD" Ref="C11"  Part="1" 
+AR Path="/4D154E46/4D1520DD" Ref="C10"  Part="1" 
+AR Path="/4D154EB4/4D1520DD" Ref="C20"  Part="1" 
+F 0 "C20" H 7750 4800 50  0000 L CNN
+F 1 "0.1" H 7750 4600 50  0000 L CNN
+F 2 "SM0805" H 7750 4500 60  0001 C CNN
+	1    7700 4700
+	0    -1   -1   0   
+$EndComp
+Text HLabel 9650 4550 2    60   Input ~ 0
+PwrDn
+Text HLabel 9650 4450 2    60   Input ~ 0
+Clk
+$Comp
+L GND #PWR056
+U 1 1 4D151FE9
+P 9750 5250
+AR Path="/4D151E4A/4D151FE9" Ref="#PWR056"  Part="1" 
+AR Path="/4D1529FF/4D151FE9" Ref="#PWR046"  Part="1" 
+AR Path="/4D154E46/4D151FE9" Ref="#PWR036"  Part="1" 
+AR Path="/4D154EB4/4D151FE9" Ref="#PWR026"  Part="1" 
+F 0 "#PWR056" H 9750 5250 30  0001 C CNN
+F 1 "GND" H 9750 5180 30  0001 C CNN
+	1    9750 5250
+	1    0    0    -1  
+$EndComp
+Text HLabel 9600 6100 2    60   Output ~ 0
+D0
+Text HLabel 9600 6000 2    60   Output ~ 0
+D1
+Text HLabel 9600 5900 2    60   Output ~ 0
+D2
+Text HLabel 9600 5800 2    60   Output ~ 0
+D3
+Text HLabel 9600 5700 2    60   Output ~ 0
+D4
+Text HLabel 9600 5600 2    60   Output ~ 0
+D5
+Text HLabel 9600 5500 2    60   Output ~ 0
+D6
+Text HLabel 9600 5400 2    60   Output ~ 0
+D7
+$Comp
+L RU R35
+U 1 1 4891B3ED
+P 5750 5100
+AR Path="/4D151E4A/4891B3ED" Ref="R35"  Part="1" 
+AR Path="/4D1529FF/4891B3ED" Ref="R34"  Part="1" 
+AR Path="/4D154E46/4891B3ED" Ref="R33"  Part="1" 
+AR Path="/4D154EB4/4891B3ED" Ref="R36"  Part="1" 
+F 0 "R36" H 5675 5150 60  0000 C CNN
+F 1 "56" H 5700 5050 60  0000 C CNN
+F 2 "SM0805" H 5700 4950 60  0001 C CNN
+	1    5750 5100
+	0    1    1    0   
+$EndComp
+$Comp
+L C C16
+U 1 1 4862828D
+P 6550 5350
+AR Path="/4D151E4A/4862828D" Ref="C16"  Part="1" 
+AR Path="/4D1529FF/4862828D" Ref="C13"  Part="1" 
+AR Path="/4D154E46/4862828D" Ref="C12"  Part="1" 
+AR Path="/4D154EB4/4862828D" Ref="C17"  Part="1" 
+F 0 "C17" H 6600 5450 50  0000 L CNN
+F 1 "0.1" H 6600 5250 50  0000 L CNN
+F 2 "SM0805" H 6600 5150 60  0001 C CNN
+	1    6550 5350
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C29
+U 1 1 48628213
+P 9750 4950
+AR Path="/4D151E4A/48628213" Ref="C29"  Part="1" 
+AR Path="/4D1529FF/48628213" Ref="C32"  Part="1" 
+AR Path="/4D154E46/48628213" Ref="C31"  Part="1" 
+AR Path="/4D154EB4/48628213" Ref="C30"  Part="1" 
+F 0 "C30" H 9800 5050 50  0000 L CNN
+F 1 "0.1" H 9800 4850 50  0000 L CNN
+F 2 "SM0805" H 9800 4750 60  0001 C CNN
+	1    9750 4950
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR057
+U 1 1 4862812A
+P 7250 5550
+AR Path="/4D151E4A/4862812A" Ref="#PWR057"  Part="1" 
+AR Path="/4D1529FF/4862812A" Ref="#PWR047"  Part="1" 
+AR Path="/4D154E46/4862812A" Ref="#PWR037"  Part="1" 
+AR Path="/4D154EB4/4862812A" Ref="#PWR027"  Part="1" 
+F 0 "#PWR057" H 7250 5550 30  0001 C CNN
+F 1 "GND" H 7250 5480 30  0001 C CNN
+	1    7250 5550
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR058
+U 1 1 48626D94
+P 8400 6750
+AR Path="/4D151E4A/48626D94" Ref="#PWR058"  Part="1" 
+AR Path="/4D1529FF/48626D94" Ref="#PWR048"  Part="1" 
+AR Path="/4D154E46/48626D94" Ref="#PWR038"  Part="1" 
+AR Path="/4D154EB4/48626D94" Ref="#PWR028"  Part="1" 
+F 0 "#PWR058" H 8400 6750 30  0001 C CNN
+F 1 "GND" H 8400 6680 30  0001 C CNN
+	1    8400 6750
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R6
+U 1 1 4852AD8D
+P 4250 5150
+AR Path="/4D151E4A/4852AD8D" Ref="R6"  Part="1" 
+AR Path="/4D1529FF/4852AD8D" Ref="R11"  Part="1" 
+AR Path="/4D154E46/4852AD8D" Ref="R9"  Part="1" 
+AR Path="/4D154EB4/4852AD8D" Ref="R13"  Part="1" 
+F 0 "R13" H 4175 5200 60  0000 C CNN
+F 1 "35" H 4200 5100 60  0000 C CNN
+F 2 "SM0805" H 4200 5000 60  0001 C CNN
+	1    4250 5150
+	0    1    1    0   
+$EndComp
+$Comp
+L RU R1
+U 1 1 4852AD88
+P 3900 4800
+AR Path="/4D151E4A/4852AD88" Ref="R1"  Part="1" 
+AR Path="/4D1529FF/4852AD88" Ref="R4"  Part="1" 
+AR Path="/4D154E46/4852AD88" Ref="R3"  Part="1" 
+AR Path="/4D154EB4/4852AD88" Ref="R7"  Part="1" 
+F 0 "R7" H 3825 4850 60  0000 C CNN
+F 1 "26" H 3850 4750 60  0000 C CNN
+F 2 "SM0805" H 3850 4650 60  0001 C CNN
+	1    3900 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R5
+U 1 1 4852AD7E
+P 4600 4800
+AR Path="/4D151E4A/4852AD7E" Ref="R5"  Part="1" 
+AR Path="/4D1529FF/4852AD7E" Ref="R10"  Part="1" 
+AR Path="/4D154E46/4852AD7E" Ref="R8"  Part="1" 
+AR Path="/4D154EB4/4852AD7E" Ref="R12"  Part="1" 
+F 0 "R12" H 4525 4850 60  0000 C CNN
+F 1 "26" H 4550 4750 60  0000 C CNN
+F 2 "SM0805" H 4550 4650 60  0001 C CNN
+	1    4600 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L P7LP F3
+U 1 1 48517554
+P 5350 4500
+AR Path="/4D151E4A/48517554" Ref="F3"  Part="1" 
+AR Path="/4D1529FF/48517554" Ref="F2"  Part="1" 
+AR Path="/4D154E46/48517554" Ref="F1"  Part="1" 
+AR Path="/4D154EB4/48517554" Ref="F4"  Part="1" 
+F 0 "F4" H 5050 4525 60  0000 C CNN
+F 1 "P7LP" H 5350 4525 60  0000 C CNN
+F 2 "SIL-9" H 5350 4425 60  0001 C CNN
+	1    5350 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR059
+U 1 1 485167B2
+P 5300 5050
+AR Path="/4D151E4A/485167B2" Ref="#PWR059"  Part="1" 
+AR Path="/4D1529FF/485167B2" Ref="#PWR049"  Part="1" 
+AR Path="/4D154E46/485167B2" Ref="#PWR039"  Part="1" 
+AR Path="/4D154EB4/485167B2" Ref="#PWR029"  Part="1" 
+F 0 "#PWR059" H 5300 5050 30  0001 C CNN
+F 1 "GND" H 5300 4980 30  0001 C CNN
+	1    5300 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R20
+U 1 1 485166B0
+P 6500 5800
+AR Path="/4D151E4A/485166B0" Ref="R20"  Part="1" 
+AR Path="/4D1529FF/485166B0" Ref="R18"  Part="1" 
+AR Path="/4D154E46/485166B0" Ref="R16"  Part="1" 
+AR Path="/4D154EB4/485166B0" Ref="R22"  Part="1" 
+F 0 "R22" H 6425 5850 60  0000 C CNN
+F 1 "270" H 6450 5750 60  0000 C CNN
+F 2 "SM0805" H 6450 5650 60  0001 C CNN
+	1    6500 5800
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R19
+U 1 1 485166AB
+P 6500 4800
+AR Path="/4D151E4A/485166AB" Ref="R19"  Part="1" 
+AR Path="/4D1529FF/485166AB" Ref="R17"  Part="1" 
+AR Path="/4D154E46/485166AB" Ref="R15"  Part="1" 
+AR Path="/4D154EB4/485166AB" Ref="R21"  Part="1" 
+F 0 "R21" H 6425 4850 60  0000 C CNN
+F 1 "240" H 6450 4750 60  0000 C CNN
+F 2 "SM0805" H 6450 4650 60  0001 C CNN
+	1    6500 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R29
+U 1 1 485166A3
+P 7700 4300
+AR Path="/4D151E4A/485166A3" Ref="R29"  Part="1" 
+AR Path="/4D1529FF/485166A3" Ref="R27"  Part="1" 
+AR Path="/4D154E46/485166A3" Ref="R25"  Part="1" 
+AR Path="/4D154EB4/485166A3" Ref="R31"  Part="1" 
+F 0 "R31" H 7625 4350 60  0000 C CNN
+F 1 "510" H 7650 4250 60  0000 C CNN
+F 2 "SM0805" H 7650 4150 60  0001 C CNN
+	1    7700 4300
+	1    0    0    -1  
+$EndComp
+$Comp
+L RU R30
+U 1 1 48516697
+P 7650 5800
+AR Path="/4D151E4A/48516697" Ref="R30"  Part="1" 
+AR Path="/4D1529FF/48516697" Ref="R28"  Part="1" 
+AR Path="/4D154E46/48516697" Ref="R26"  Part="1" 
+AR Path="/4D154EB4/48516697" Ref="R32"  Part="1" 
+F 0 "R32" H 7575 5850 60  0000 C CNN
+F 1 "510" H 7600 5750 60  0000 C CNN
+F 2 "SM0805" H 7600 5650 60  0001 C CNN
+	1    7650 5800
+	1    0    0    -1  
+$EndComp
+$Comp
+L AD8138 IC4
+U 1 1 4851627D
+P 7300 5100
+AR Path="/4D151E4A/4851627D" Ref="IC4"  Part="1" 
+AR Path="/4D1529FF/4851627D" Ref="IC3"  Part="1" 
+AR Path="/4D154E46/4851627D" Ref="IC2"  Part="1" 
+AR Path="/4D154EB4/4851627D" Ref="IC5"  Part="1" 
+F 0 "IC5" H 7100 5300 60  0000 C CNN
+F 1 "AD8138ARMZ" H 7250 4900 60  0000 C CNN
+F 2 "MSOP8" H 7250 4800 60  0001 C CNN
+	1    7300 5100
+	1    0    0    -1  
+$EndComp
+$Comp
+L AD9283 IC6
+U 1 1 485125E3
+P 8950 5700
+AR Path="/4D151E4A/485125E3" Ref="IC6"  Part="1" 
+AR Path="/4D1529FF/485125E3" Ref="IC9"  Part="1" 
+AR Path="/4D154E46/485125E3" Ref="IC8"  Part="1" 
+AR Path="/4D154EB4/485125E3" Ref="IC7"  Part="1" 
+F 0 "IC7" H 8850 6050 60  0000 C CNN
+F 1 "AD9283BRSZ-100" H 8900 5150 60  0000 C CNN
+F 2 "SSOP20jr" V 9000 5400 60  0001 C CNN
+	1    8950 5700
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC
